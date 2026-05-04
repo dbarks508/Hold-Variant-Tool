@@ -2,20 +2,28 @@ import { useState } from "react";
 
 import { getVariantCsvRows } from "../utils/exportCsv";
 
-const csvHeaders = [
+const baseCsvHeaders = [
   "handle",
   "option value 1",
   "variant sku",
   "variant price",
   "weight",
-  "inventory policy",
-  "inventory tracking",
 ];
 
-function CsvPreviewButton({ variants, parentSku }) {
+function CsvPreviewButton({ variants, parentSku, weight, inventoryOptions }) {
   const [isOpen, setIsOpen] = useState(false);
   const isDisabled = !variants || variants.length === 0;
-  const rows = getVariantCsvRows(variants, parentSku);
+  const rows = getVariantCsvRows(
+    variants,
+    parentSku,
+    weight,
+    inventoryOptions,
+  );
+  const csvHeaders = [
+    ...baseCsvHeaders,
+    ...(inventoryOptions?.policy ? ["inventory policy"] : []),
+    ...(inventoryOptions?.tracking ? ["inventory tracking"] : []),
+  ];
 
   return (
     <>

@@ -7,15 +7,25 @@ const copyHeaders = [
   "option value 1",
   "variant sku",
   "variant price",
+  "weight",
 ];
 
-function VariantPreview({ variants = [], parentSku = "", actions = null }) {
+function VariantPreview({
+  variants = [],
+  parentSku = "",
+  weight = "",
+  inventoryOptions = {},
+  actions = null,
+}) {
   const [isCopied, setIsCopied] = useState(false);
 
   async function copyTable() {
-    const rows = getVariantCsvRows(variants, parentSku).map((row) =>
-      copyHeaders.map((header) => row[header]),
-    );
+    const rows = getVariantCsvRows(
+      variants,
+      parentSku,
+      weight,
+      inventoryOptions,
+    ).map((row) => copyHeaders.map((header) => row[header]));
     const tableText = [copyHeaders, ...rows]
       .map((row) => row.map((value) => value || "").join("\t"))
       .join("\n");

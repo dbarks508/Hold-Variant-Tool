@@ -15,6 +15,8 @@ import CsvDownloadButton from "./components/CsvDownloadButton";
 import CsvPreviewButton from "./components/CsvPreviewButton";
 import TexturePriceInputs from "./components/TexturePriceInputs";
 import DtBaseColorSelector from "./components/DtBaseColorSelector";
+import WeightInput from "./components/WeightInput";
+import InventoryExportOptions from "./components/InventoryExportOptions";
 
 function App() {
   const [parentSku, setParentSku] = useState("");
@@ -22,7 +24,16 @@ function App() {
   const [selectedTextures, setSelectedTextures] = useState([]);
   const [selectedMfgr, setSelectedMfgr] = useState(null);
   const [pricesByTexture, setPricesByTexture] = useState({});
+  const [weight, setWeight] = useState("");
+  const [inventoryPolicyEnabled, setInventoryPolicyEnabled] = useState(false);
+  const [inventoryTrackingEnabled, setInventoryTrackingEnabled] =
+    useState(false);
   const [selectedDtBaseColors, setSelectedDtBaseColors] = useState([]);
+
+  const inventoryOptions = {
+    policy: inventoryPolicyEnabled ? "continue" : "",
+    tracking: inventoryTrackingEnabled ? "shopify" : "",
+  };
 
   function updateSelectedMfgr(mfgr) {
     setSelectedMfgr(mfgr);
@@ -86,16 +97,37 @@ function App() {
             pricesByTexture={pricesByTexture}
             setPricesByTexture={setPricesByTexture}
           />
+
+          <WeightInput weight={weight} setWeight={setWeight} />
+
+          <InventoryExportOptions
+            inventoryPolicyEnabled={inventoryPolicyEnabled}
+            setInventoryPolicyEnabled={setInventoryPolicyEnabled}
+            inventoryTrackingEnabled={inventoryTrackingEnabled}
+            setInventoryTrackingEnabled={setInventoryTrackingEnabled}
+          />
         </div>
 
         <div className="preview-panel">
           <VariantPreview
             variants={variants}
             parentSku={parentSku}
+            weight={weight}
+            inventoryOptions={inventoryOptions}
             actions={
               <>
-                <CsvPreviewButton variants={variants} parentSku={parentSku} />
-                <CsvDownloadButton variants={variants} parentSku={parentSku} />
+                <CsvPreviewButton
+                  variants={variants}
+                  parentSku={parentSku}
+                  weight={weight}
+                  inventoryOptions={inventoryOptions}
+                />
+                <CsvDownloadButton
+                  variants={variants}
+                  parentSku={parentSku}
+                  weight={weight}
+                  inventoryOptions={inventoryOptions}
+                />
               </>
             }
           />
