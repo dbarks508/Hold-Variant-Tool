@@ -1,18 +1,27 @@
 import Papa from "papaparse";
 
+export function getVariantCsvRows(variants = [], parentSku = "") {
+  return variants.map((variant) => ({
+    handle: parentSku || "",
+    "option value 1": variant.title,
+    "variant sku": variant.sku,
+    "variant price": variant.price || "",
+    weight: "",
+    "inventory policy": "",
+    "inventory tracking": "",
+  }));
+}
+
+export function buildVariantsCsv(variants = [], parentSku = "") {
+  return Papa.unparse(getVariantCsvRows(variants, parentSku));
+}
+
 export function exportVariantsToCsv(variants, parentSku = "variants") {
   if (!variants || variants.length === 0) {
     return;
   }
 
-  const csvRows = variants.map((variant) => ({
-    handle: parentSku || "",
-    "variant option 1 value": variant.title,
-    "variant sku": variant.sku,
-    price: variant.price || "",
-  }));
-
-  const csv = Papa.unparse(csvRows);
+  const csv = buildVariantsCsv(variants, parentSku);
 
   const blob = new Blob([csv], {
     type: "text/csv;charset=utf-8;",

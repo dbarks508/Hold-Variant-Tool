@@ -5,14 +5,10 @@ function CsvDownloadButton({ variants, parentSku }) {
 
   return (
     <button
+      className="download-button"
       type="button"
       disabled={isDisabled}
       onClick={() => exportVariantsToCsv(variants, parentSku)}
-      style={{
-        marginTop: "1rem",
-        padding: "0.75rem 1rem",
-        cursor: isDisabled ? "not-allowed" : "pointer",
-      }}
     >
       Download CSV
     </button>

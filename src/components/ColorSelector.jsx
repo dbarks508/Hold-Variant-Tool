@@ -1,4 +1,4 @@
-function ColorSelector({ colors, selectedColors, setSelectedColors, mfgr }) {
+function ColorSelector({ colors, selectedColors, setSelectedColors }) {
   function toggleColor(color) {
     const isSelected = selectedColors.some((c) => c.name === color.name);
 
@@ -10,19 +10,21 @@ function ColorSelector({ colors, selectedColors, setSelectedColors, mfgr }) {
   }
 
   return (
-    <section>
+    <section className="tool-section">
       <h2>Colors</h2>
 
-      {colors.map((color) => (
-        <label key={color.name} style={{ display: "block" }}>
-          <input
-            type="checkbox"
-            checked={selectedColors.some((c) => c.name === color.name)}
-            onChange={() => toggleColor(color)}
-          />
-          {color.name}
-        </label>
-      ))}
+      <div className="option-grid option-grid--dense">
+        {colors.map((color) => (
+          <label key={color.name} className="option-row">
+            <input
+              type="checkbox"
+              checked={selectedColors.some((c) => c.name === color.name)}
+              onChange={() => toggleColor(color)}
+            />
+            <span>{color.name}</span>
+          </label>
+        ))}
+      </div>
     </section>
   );
 }

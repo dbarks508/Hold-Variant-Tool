@@ -1,9 +1,10 @@
 function ParentSkuInput({ parentSku, setParentSku }) {
   return (
-    <section>
-      <label>
-        Parent SKU:
+    <section className="tool-section">
+      <label className="field">
+        <span className="field-label">Parent SKU</span>
         <input
+          className="text-input"
           type="text"
           value={parentSku}
           onChange={(e) => setParentSku(e.target.value)}
