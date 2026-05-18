@@ -85,6 +85,7 @@ export const colors = [
     name: "light purple",
     codes: {
       compx: "CX217-18",
+      absolute: "AB317-18",
     },
   },
   {

@@ -4,6 +4,8 @@ function DtBaseColorSelector({
   selectedTextures,
   selectedDtBaseColors,
   setSelectedDtBaseColors,
+  colorOptions = selectedColors,
+  emptyMessage = "Select colors to choose DT bases.",
 }) {
   const isAbsolute = selectedMfgr?.code === "absolute";
   const isDtSelected = selectedTextures.some((texture) => texture.code === "DT");
@@ -28,11 +30,11 @@ function DtBaseColorSelector({
     <section className="tool-section tool-section--accent">
       <h2>Absolute DT Base Colors</h2>
 
-      {selectedColors.length === 0 ? (
-        <p className="empty-state">Select colors to choose DT bases.</p>
+      {colorOptions.length === 0 ? (
+        <p className="empty-state">{emptyMessage}</p>
       ) : (
         <div className="option-grid option-grid--dense">
-          {selectedColors.map((color) => (
+          {colorOptions.map((color) => (
             <label key={color.name} className="option-row">
               <input
                 type="checkbox"

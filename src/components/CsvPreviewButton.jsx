@@ -13,12 +13,9 @@ const baseCsvHeaders = [
 function CsvPreviewButton({ variants, parentSku, weight, inventoryOptions }) {
   const [isOpen, setIsOpen] = useState(false);
   const isDisabled = !variants || variants.length === 0;
-  const rows = getVariantCsvRows(
-    variants,
-    parentSku,
-    weight,
-    inventoryOptions,
-  );
+  const rows = isOpen
+    ? getVariantCsvRows(variants, parentSku, weight, inventoryOptions)
+    : [];
   const csvHeaders = [
     ...baseCsvHeaders,
     ...(inventoryOptions?.policy ? ["inventory policy"] : []),
@@ -79,3 +76,4 @@ function CsvPreviewButton({ variants, parentSku, weight, inventoryOptions }) {
 }
 
 export default CsvPreviewButton;
+

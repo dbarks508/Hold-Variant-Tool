@@ -1,3 +1,20 @@
+function getUniqueColors(colors = []) {
+  const seenNames = new Set();
+
+  return colors.filter((color) => {
+    if (seenNames.has(color.name)) {
+      return false;
+    }
+
+    seenNames.add(color.name);
+    return true;
+  });
+}
+
+function isSameColor(colorA, colorB) {
+  return colorA.name === colorB.name;
+}
+
 export function generateVariants({
   selectedMfgr = null,
   parentSku = "",
@@ -5,6 +22,9 @@ export function generateVariants({
   selectedTextures = [],
   pricesByTexture = {},
   selectedDtBaseColors = [],
+  generationMode = "full",
+  selectedNewColors = [],
+  selectedExistingColors = [],
 }) {
   const variants = [];
 
@@ -24,86 +44,94 @@ export function generateVariants({
     return sku.toUpperCase();
   }
 
+  function addSingleVariant(color, texture, price) {
+    const colorCode = getColorCode(color);
+
+    if (!colorCode) {
+      return;
+    }
+
+    variants.push({
+      title: `${formatColorName(color)} - ${texture.code}`,
+      mfgr: selectedMfgr.code,
+      texture: texture.code,
+      color1: formatColorName(color),
+      color2: "",
+      sku: formatSku(`${parentSku}.${colorCode}`),
+      price,
+    });
+  }
+
+  function addPairVariant(color1, color2, texture, price) {
+    const colorCode1 = getColorCode(color1);
+    const colorCode2 = getColorCode(color2);
+
+    if (!colorCode1 || !colorCode2) {
+      return;
+    }
+
+    variants.push({
+      title: `${formatColorName(color1)}/${formatColorName(color2)} - ${
+        texture.code
+      }`,
+      mfgr: selectedMfgr.code,
+      texture: texture.code,
+      color1: formatColorName(color1),
+      color2: formatColorName(color2),
+      sku: formatSku(
+        `${parentSku}.${colorCode1}/${colorCode2}(${texture.code})`,
+      ),
+      price,
+    });
+  }
+
   selectedTextures.forEach((texture) => {
     if (selectedMfgr.code === "compx" && texture.code !== "FT") {
       return;
     }
 
     const price = pricesByTexture[texture.code] || "";
+    const isAddColorMode = generationMode === "add-color";
+    const newColors = isAddColorMode ? selectedNewColors : selectedColors;
+    const existingColors = isAddColorMode ? selectedExistingColors : [];
+    const pairColors = isAddColorMode
+      ? getUniqueColors([...existingColors, ...newColors])
+      : selectedColors;
 
     if (texture.mode === "single") {
-      selectedColors.forEach((color) => {
-        const colorCode = getColorCode(color);
-
-        if (!colorCode) {
-          return;
-        }
-
-        variants.push({
-          title: `${formatColorName(color)} - ${texture.code}`,
-          mfgr: selectedMfgr.code,
-          texture: texture.code,
-          color1: formatColorName(color),
-          color2: "",
-          sku: formatSku(`${parentSku}.${colorCode}`),
-          price,
-        });
-      });
+      newColors.forEach((color) => addSingleVariant(color, texture, price));
     }
 
     if (texture.mode === "pair" && texture.code === "DP") {
-      selectedColors.forEach((color1) => {
-        selectedColors.forEach((color2) => {
-          const colorCode1 = getColorCode(color1);
-          const colorCode2 = getColorCode(color2);
+      if (isAddColorMode) {
+        pairColors.forEach((color1) => {
+          pairColors.forEach((color2) => {
+            const hasNewColor = newColors.some(
+              (newColor) => isSameColor(newColor, color1) || isSameColor(newColor, color2),
+            );
 
-          if (!colorCode1 || !colorCode2) {
-            return;
-          }
-
-          variants.push({
-            title: `${formatColorName(color1)}/${formatColorName(color2)} - ${
-              texture.code
-            }`,
-            mfgr: selectedMfgr.code,
-            texture: texture.code,
-            color1: formatColorName(color1),
-            color2: formatColorName(color2),
-            sku: formatSku(
-              `${parentSku}.${colorCode1}/${colorCode2}(${texture.code})`,
-            ),
-            price,
+            if (hasNewColor) {
+              addPairVariant(color1, color2, texture, price);
+            }
           });
         });
-      });
+      } else {
+        selectedColors.forEach((color1) => {
+          selectedColors.forEach((color2) => {
+            addPairVariant(color1, color2, texture, price);
+          });
+        });
+      }
     }
 
     if (texture.mode === "pair" && texture.code === "DT") {
       const baseColors =
-        selectedMfgr.code === "absolute" ? selectedDtBaseColors : selectedColors;
+        selectedMfgr.code === "absolute" ? selectedDtBaseColors : pairColors;
+      const insetColors = isAddColorMode ? newColors : selectedColors;
 
       baseColors.forEach((baseColor) => {
-        selectedColors.forEach((insetColor) => {
-          const baseColorCode = getColorCode(baseColor);
-          const insetColorCode = getColorCode(insetColor);
-
-          if (!baseColorCode || !insetColorCode) {
-            return;
-          }
-
-          variants.push({
-            title: `${formatColorName(baseColor)}/${formatColorName(
-              insetColor,
-            )} - ${texture.code}`,
-            mfgr: selectedMfgr.code,
-            texture: texture.code,
-            color1: formatColorName(baseColor),
-            color2: formatColorName(insetColor),
-            sku: formatSku(
-              `${parentSku}.${baseColorCode}/${insetColorCode}(${texture.code})`,
-            ),
-            price,
-          });
+        insetColors.forEach((insetColor) => {
+          addPairVariant(baseColor, insetColor, texture, price);
         });
       });
     }

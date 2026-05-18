@@ -8,11 +8,11 @@ export function getVariantCsvRows(
 ) {
   return variants.map((variant) => {
     const row = {
-      handle: parentSku || "",
+      handle: variant.handle || parentSku || "",
       "option value 1": variant.title,
       "variant sku": variant.sku,
       "variant price": variant.price || "",
-      weight,
+      weight: variant.weight ?? weight,
     };
 
     if (inventoryOptions.policy) {
@@ -43,6 +43,7 @@ export function exportVariantsToCsv(
   parentSku = "variants",
   weight = "",
   inventoryOptions = {},
+  fileName = "",
 ) {
   if (!variants || variants.length === 0) {
     return;
@@ -58,7 +59,7 @@ export function exportVariantsToCsv(
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${parentSku || "variants"}-variants.csv`;
+  link.download = `${fileName || parentSku || "variants"}-variants.csv`;
 
   document.body.appendChild(link);
   link.click();
