@@ -29,6 +29,10 @@ export function generateMultiVariants({
   }
 
   return groups.flatMap((group) => {
+    if (group.excluded) {
+      return [];
+    }
+
     const texture = getTextureByCode(textures, group.texture);
 
     if (!texture) {

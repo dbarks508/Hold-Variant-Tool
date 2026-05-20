@@ -6,6 +6,9 @@ function HextomUpload({
   onFileChange,
 }) {
   const textureCounts = summary?.productCountByTexture || {};
+  const exportableProductCount =
+    summary?.exportableProductCount ?? summary?.productCount ?? 0;
+  const excludedProductCount = summary?.excludedProductCount ?? 0;
 
   return (
     <section className="tool-section">
@@ -35,8 +38,12 @@ function HextomUpload({
       {summary && (
         <div className="upload-summary" role="status">
           <p>
-            Upload found <strong>{summary.productCount}</strong> products from{" "}
-            <strong>{summary.parsedRowCount}</strong> export rows.
+            <strong>{summary.productCount}</strong> imported /{" "}
+            <strong>{exportableProductCount}</strong> ready /{" "}
+            <strong>{excludedProductCount}</strong> excluded from export.
+          </p>
+          <p className="export-status-detail">
+            {summary.parsedRowCount} export rows parsed.
           </p>
           <dl className="summary-grid">
             <div>
@@ -50,14 +57,6 @@ function HextomUpload({
             <div>
               <dt>DP</dt>
               <dd>{textureCounts.DP || 0}</dd>
-            </div>
-            <div>
-              <dt>Duplicates</dt>
-              <dd>{summary.duplicateRowCount}</dd>
-            </div>
-            <div>
-              <dt>Warnings</dt>
-              <dd>{summary.conflictCount + (summary.unclassifiedRowCount > 0 ? 1 : 0)}</dd>
             </div>
           </dl>
         </div>

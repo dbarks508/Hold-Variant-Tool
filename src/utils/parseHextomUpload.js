@@ -95,14 +95,67 @@ function formatPrice(price) {
   return Number.isFinite(price) ? price.toFixed(2) : "";
 }
 
-function buildHandleWarning(type, label, rows) {
+function getPriceKey(row) {
+  const parsedPrice = parsePrice(row.price);
+
+  return parsedPrice === null ? normalizeValue(row.price) : formatPrice(parsedPrice);
+}
+
+function getMostCommonPrice(rows) {
+  const priceCounts = new Map();
+
+  rows.forEach((row, index) => {
+    const priceKey = getPriceKey(row);
+    const priceCount = priceCounts.get(priceKey) || {
+      price: priceKey,
+      count: 0,
+      firstIndex: index,
+    };
+
+    priceCounts.set(priceKey, {
+      ...priceCount,
+      count: priceCount.count + 1,
+    });
+  });
+
+  return [...priceCounts.values()].sort((priceA, priceB) => {
+    if (priceA.count !== priceB.count) {
+      return priceB.count - priceA.count;
+    }
+
+    return priceA.firstIndex - priceB.firstIndex;
+  })[0]?.price || "";
+}
+
+function hasPriceConflict(rows) {
+  const parsedPrices = rows
+    .map((row) => parsePrice(row.price))
+    .filter((price) => price !== null);
+
+  if (parsedPrices.length < 2) {
+    return false;
+  }
+
+  return Math.max(...parsedPrices) - Math.min(...parsedPrices) >= 0.05;
+}
+
+function buildHandleWarning(type, label, rows, copyRows = rows) {
   const handles = [...new Set(rows.map((row) => row.handle).filter(Boolean))];
+  const originalHeaders = [
+    ...new Set(
+      copyRows.flatMap((row) =>
+        row.originalRow ? Object.keys(row.originalRow) : [],
+      ),
+    ),
+  ];
 
   return {
     type,
     label,
     handles,
     rows,
+    copyRows,
+    originalHeaders,
   };
 }
 
@@ -115,6 +168,10 @@ function buildParsedUpload(rows) {
         parsedRowCount: 0,
         duplicateRowCount: 0,
         productCount: 0,
+        exportableProductCount: 0,
+        exportableGroupCount: 0,
+        excludedProductCount: 0,
+        excludedGroupCount: 0,
         productCountByTexture: {},
         conflictCount: 0,
         unclassifiedRowCount: 0,
@@ -135,7 +192,9 @@ function buildParsedUpload(rows) {
   const exactRows = new Set();
   const products = new Set();
   const productsByTexture = new Map();
+  const sourceRows = [];
   const unclassifiedRows = [];
+  const unclassifiedHandles = new Set();
   let duplicateRowCount = 0;
 
   rows.forEach((row, rowIndex) => {
@@ -159,10 +218,22 @@ function buildParsedUpload(rows) {
       weight,
       optionValue,
       texture,
+      originalRow: row,
     };
+
+    sourceRows.push(sourceRow);
+
+    if (handle) {
+      products.add(handle);
+    }
 
     if (!handle || !texture) {
       unclassifiedRows.push(sourceRow);
+
+      if (handle) {
+        unclassifiedHandles.add(handle);
+      }
+
       return;
     }
 
@@ -170,11 +241,9 @@ function buildParsedUpload(rows) {
 
     if (exactRows.has(exactKey)) {
       duplicateRowCount += 1;
-      return;
+    } else {
+      exactRows.add(exactKey);
     }
-
-    exactRows.add(exactKey);
-    products.add(handle);
 
     if (!productsByTexture.has(texture)) {
       productsByTexture.set(texture, new Set());
@@ -197,21 +266,16 @@ function buildParsedUpload(rows) {
 
   const priceConflictRows = [];
   const weightConflictRows = [];
-  const groups = [...groupsByKey.values()].map((group) => {
-    const firstRow = group.rows[0];
-    const firstPriceNumber = parsePrice(firstRow.price);
+  const parsedGroups = [...groupsByKey.values()].map((group) => {
+    const chosenPrice = getMostCommonPrice(group.rows);
     const groupPriceConflictRows = [];
     const weights = new Set(group.rows.map((row) => row.weight));
     const hasWeightConflict = weights.size > 1;
+    const hasGroupPriceConflict = hasPriceConflict(group.rows);
+    const isExcluded = hasGroupPriceConflict || hasWeightConflict;
 
-    group.rows.slice(1).forEach((row) => {
-      const rowPriceNumber = parsePrice(row.price);
-
-      if (
-        firstPriceNumber !== null &&
-        rowPriceNumber !== null &&
-        Math.abs(rowPriceNumber - firstPriceNumber) >= 0.05
-      ) {
+    group.rows.forEach((row) => {
+      if (hasGroupPriceConflict && getPriceKey(row) !== chosenPrice) {
         groupPriceConflictRows.push(row);
       }
     });
@@ -219,14 +283,14 @@ function buildParsedUpload(rows) {
     if (groupPriceConflictRows.length > 0) {
       priceConflictRows.push(
         {
-          ...firstRow,
+          ...group.rows.find((row) => getPriceKey(row) === chosenPrice),
           priceWarningRole: "used",
-          referencePrice: firstRow.price,
+          referencePrice: chosenPrice,
         },
         ...groupPriceConflictRows.map((row) => ({
           ...row,
           priceWarningRole: "conflict",
-          referencePrice: firstRow.price,
+          referencePrice: chosenPrice,
         })),
       );
     }
@@ -238,33 +302,84 @@ function buildParsedUpload(rows) {
     return {
       handle: group.handle,
       texture: group.texture,
-      price: firstPriceNumber === null ? firstRow.price : formatPrice(firstPriceNumber),
-      weight: hasWeightConflict ? "" : firstRow.weight,
+      price: chosenPrice,
+      weight: hasWeightConflict ? "" : group.rows[0].weight,
+      excluded: isExcluded,
+      exclusionReasons: [
+        hasGroupPriceConflict ? "price-conflict" : "",
+        hasWeightConflict ? "weight-conflict" : "",
+      ].filter(Boolean),
       hasWeightConflict,
       rows: group.rows,
     };
   });
+  const excludedHandles = new Set(
+    [
+      ...parsedGroups
+        .filter((group) => group.excluded)
+        .map((group) => group.handle),
+      ...unclassifiedHandles,
+    ],
+  );
+  const groups = parsedGroups.map((group) => {
+    if (!excludedHandles.has(group.handle)) {
+      return group;
+    }
+
+    return {
+      ...group,
+      excluded: true,
+      exclusionReasons:
+        group.exclusionReasons.length > 0
+          ? group.exclusionReasons
+          : ["unclassified"],
+    };
+  });
 
   const warnings = [];
+  const getSourceRowsForHandles = (handles) =>
+    sourceRows.filter((row) => handles.has(row.handle));
 
   if (priceConflictRows.length > 0) {
+    const handles = new Set(priceConflictRows.map((row) => row.handle));
+
     warnings.push(
-      buildHandleWarning("price-conflict", "Price conflicts", priceConflictRows),
+      buildHandleWarning(
+        "price-conflict",
+        "Excluded from export: price conflicts",
+        priceConflictRows,
+        getSourceRowsForHandles(handles),
+      ),
     );
   }
 
   if (weightConflictRows.length > 0) {
+    const handles = new Set(weightConflictRows.map((row) => row.handle));
+
     warnings.push(
-      buildHandleWarning("weight-conflict", "Weight varies", weightConflictRows),
+      buildHandleWarning(
+        "weight-conflict",
+        "Excluded from export: weight varies",
+        weightConflictRows,
+        getSourceRowsForHandles(handles),
+      ),
     );
   }
 
   if (unclassifiedRows.length > 0) {
+    const handles = new Set(unclassifiedRows.map((row) => row.handle));
+    const rowsWithoutHandles = unclassifiedRows.filter((row) => !row.handle);
+    const copyRows = [
+      ...getSourceRowsForHandles(handles),
+      ...rowsWithoutHandles,
+    ];
+
     warnings.push(
       buildHandleWarning(
         "unclassified",
-        "Unclassified rows",
+        "Excluded from export: unclassified rows",
         unclassifiedRows,
+        copyRows,
       ),
     );
   }
@@ -279,6 +394,11 @@ function buildParsedUpload(rows) {
     return TEXTURE_ORDER.indexOf(a.texture) - TEXTURE_ORDER.indexOf(b.texture);
   });
 
+  const exportableProductCount = new Set(
+    groups.filter((group) => !group.excluded).map((group) => group.handle),
+  ).size;
+  const excludedProductCount = products.size - exportableProductCount;
+
   return {
     groups,
     warnings,
@@ -286,6 +406,10 @@ function buildParsedUpload(rows) {
       parsedRowCount: rows.length,
       duplicateRowCount,
       productCount: products.size,
+      exportableProductCount,
+      exportableGroupCount: groups.filter((group) => !group.excluded).length,
+      excludedProductCount,
+      excludedGroupCount: groups.filter((group) => group.excluded).length,
       productCountByTexture: Object.fromEntries(
         [...productsByTexture.entries()].map(([texture, textureProducts]) => [
           texture,

@@ -51,13 +51,18 @@ export function generateVariants({
       return;
     }
 
+    const textureSuffix =
+      selectedMfgr.code === "absolute" && texture.code === "FT"
+        ? `(${texture.code})`
+        : "";
+
     variants.push({
       title: `${formatColorName(color)} - ${texture.code}`,
       mfgr: selectedMfgr.code,
       texture: texture.code,
       color1: formatColorName(color),
       color2: "",
-      sku: formatSku(`${parentSku}.${colorCode}`),
+      sku: formatSku(`${parentSku}.${colorCode}${textureSuffix}`),
       price,
     });
   }

@@ -99,15 +99,24 @@ Source sample inspected: `c:\Users\dylan\Downloads\absolute_hex.xlsx`
 - Collapse exact duplicate source Hextom rows for the same handle, texture, price, and weight before generation.
 - Do not collapse generated variants; every selected color/texture/base combination still needs to create its expected variant row.
 - Detect same-handle conflicts within each texture group.
-- Warn and continue when rows cannot be classified; users can add those manually in Single Mode if needed.
+- Continue parsing when rows cannot be classified, but exclude those rows from generated export; users can add those manually in Single Mode if needed.
 - Ignore price differences under 5 cents within the same handle/texture group.
 - Treat price differences of 5 cents or more as conflicts.
-- When an ignored under-5-cent price difference is found, use the first price encountered in that texture group.
+- When an ignored under-5-cent price difference is found, use the most common value in the texture group.
 - Use uploaded price as the base/current variant price in Multi Mode.
-- For Absolute Multi Mode products with an FT price, use texture price math only as a guide inside existing price conflicts: `DT = FT * 1.1` and `DP = FT * 1.3`. Do not create warnings solely because a price differs from the formula, and do not calculate generated export prices from the formula.
+- Exclude blocker/error products from generated Multi Mode export when the app cannot safely choose output values.
+- Excluded products should remain visible in a review area so users can manually inspect or recreate them in Single Mode.
+- Add a copy action for excluded products that outputs spreadsheet-friendly rows with handle, texture, issue type, source row numbers, prices, weights, and option values.
+- Price conflicts of 5 cents or more are blocker/error items and should be excluded from generated Multi Mode export.
+- Unclassified rows are blocker/error items and should be excluded because the app cannot safely determine `DT`, `FT`, or `DP`.
+- Weight conflicts are blocker/error items by default and should be excluded unless a future rule defines a safe output weight.
+- Under-5-cent price differences are review items, not blocker/error items, because the app can safely use the most common value.
+- Review items should stay included in generated Multi Mode export while remaining visible in a review/suggestion area for easy inspection.
+- For Absolute Multi Mode products with an FT price, use texture price math only as a guide: `DT = FT * 1.1` and `DP = FT * 1.3`. Do not calculate generated export prices from the formula.
+- Absolute products that do not fit the expected FT/DT/DP price structure should appear in a separate suggestion-style review area, not the standard blocker/error output. The message should suggest that pricing may not match the desired business logic.
 - Use uploaded weight as the product weight in Multi Mode.
 - Most DP and FT rows are expected to have `1` lb weight.
-- If weight varies within the same handle/texture group, warn and ignore weight for that product/texture output.
+- If weight varies within the same handle/texture group, exclude that product/texture output and list it in the blocker/error review area.
 - Treat uploaded product fields as product-specific values.
 - Treat UI selections as shared values applied across all parsed products.
 
@@ -185,7 +194,6 @@ Warning detail decision:
 
 - Consider a quick action that copies a flagged product handle for manual Single Mode work.
 
-
 ### Add Color Expansion Mode
 
 #### Goal
@@ -218,20 +226,20 @@ This is intended for launches like adding `Signal Violet` / `Light Purple` acros
 
 Using the Absolute color list:
 
-| Color | Mfgr | Group | Short Code | Full Code |
-| --- | --- | --- | --- | --- |
-| Red | AB | 1 | 11-12 | AB111-12 |
-| Orange | AB | 1 | 14-01 | AB114-01 |
-| Yellow | AB | 1 | 15-12 | AB115-12 |
-| Green | AB | 1 | 16-16 | AB116-16 |
-| Blue | AB | 2 | 13-01 | AB213-01 |
-| Purple | AB | 2 | 07-13 | AB207-13 |
-| Pink | AB | 2 | 11-26 | AB211-26 |
-| Black | AB | 0 | 18-01 | AB018-01 |
-| White | AB | 1 | 12-01 | AB112-01 |
-| Lime Green | AB | 1 | 16-09 | AB116-09 |
-| Mint | AB | 0 | 16-27 | AB016-27 |
-| Signal Violet | AB | 3 | 17-18 | AB317-18 |
+| Color         | Mfgr | Group | Short Code | Full Code |
+| ------------- | ---- | ----- | ---------- | --------- |
+| Red           | AB   | 1     | 11-12      | AB111-12  |
+| Orange        | AB   | 1     | 14-01      | AB114-01  |
+| Yellow        | AB   | 1     | 15-12      | AB115-12  |
+| Green         | AB   | 1     | 16-16      | AB116-16  |
+| Blue          | AB   | 2     | 13-01      | AB213-01  |
+| Purple        | AB   | 2     | 07-13      | AB207-13  |
+| Pink          | AB   | 2     | 11-26      | AB211-26  |
+| Black         | AB   | 0     | 18-01      | AB018-01  |
+| White         | AB   | 1     | 12-01      | AB112-01  |
+| Lime Green    | AB   | 1     | 16-09      | AB116-09  |
+| Mint          | AB   | 0     | 16-27      | AB016-27  |
+| Signal Violet | AB   | 3     | 17-18      | AB317-18  |
 
 Expected new variants for adding one new color:
 
@@ -302,27 +310,23 @@ For Signal Violet:
 
 ## Decision Log
 
-| Date | Decision | Reason |
-| --- | --- | --- |
-| 2026-05-14 | Created blueprint before implementation changes. | Larger changes need a shared plan before code edits. |
-| 2026-05-14 | Multi Mode should use Hextom upload as the primary input. | Upload avoids fragile manual paste workflows. |
-| 2026-05-14 | Multi Mode should prefer one-file parsing with `Option value 1`. | One upload can classify `DT`, `FT`, and `DP` rows when option values are reliable. |
-| 2026-05-14 | Manual price and weight inputs are hidden in Multi Mode. | Price and weight come from uploaded Hextom data. |
-| 2026-05-14 | Support both `.xlsx` and `.csv` uploads. | Hextom/spreadsheet exports may be available in either format. |
-| 2026-05-14 | Warn and continue for unclassified rows. | Users can manually add flagged products in Single Mode if needed. |
-| 2026-05-14 | Ignore same-texture price differences under 5 cents and use the first encountered price. | Small Hextom/export rounding differences should not block the workflow. |
-| 2026-05-14 | Require one upload with the necessary `Option value 1` rows instead of three separate texture uploads. | One-file parsing is the intended workflow. |
-| 2026-05-14 | Group Multi Mode CSV output by product. | Product grouping should be easier to inspect and reason about. |
-| 2026-05-14 | Show an upload summary alert with detected product count every time. | Users need to confirm the upload aligns with their source export. |
-| 2026-05-14 | Treat price differences of 5 cents or more as conflicts. | Differences at or above the threshold should be reviewed. |
-| 2026-05-14 | Warn and ignore weight when weight varies within the same handle/texture group. | Weight can be manually added later and should not overcomplicate the first Multi Mode version. |
-| 2026-05-14 | Multi Mode exports the whole uploaded file. | The user wants one export for all detected texture groups. |
-| 2026-05-14 | Warnings show affected handles first with pop-out/inspect details. | Keeps warning UI compact while preserving row-level detail when needed. |
-| 2026-05-18 | Generated variants preview renders one product first, then reveals 4 more products per click. | Large Multi Mode exports should stay responsive while full copy/download output remains available. |
-| 2026-05-18 | Add Color Expansion Mode is the next iteration. | Adding a new color needs FT singles, DT base/new-color pairs, and DP ordered pairs containing the new color without regenerating old combinations. |
-| 2026-05-18 | Implemented Add Color Expansion Mode with separate existing, new, and DT base color selections. | The tool can now generate Signal Violet-style additions without exporting old existing-color combinations. |
-| 2026-05-18 | Absolute Multi Mode uses FT price math only as a conflict-resolution guide. | The formula helps choose between conflicting uploaded prices, but it should not create warnings or calculate generated export prices by itself. |
-
-
-
-
+| Date       | Decision                                                                                               | Reason                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-14 | Created blueprint before implementation changes.                                                       | Larger changes need a shared plan before code edits.                                                                                               |
+| 2026-05-14 | Multi Mode should use Hextom upload as the primary input.                                              | Upload avoids fragile manual paste workflows.                                                                                                      |
+| 2026-05-14 | Multi Mode should prefer one-file parsing with `Option value 1`.                                       | One upload can classify `DT`, `FT`, and `DP` rows when option values are reliable.                                                                 |
+| 2026-05-14 | Manual price and weight inputs are hidden in Multi Mode.                                               | Price and weight come from uploaded Hextom data.                                                                                                   |
+| 2026-05-14 | Support both `.xlsx` and `.csv` uploads.                                                               | Hextom/spreadsheet exports may be available in either format.                                                                                      |
+| 2026-05-14 | Warn and continue for unclassified rows.                                                               | Users can manually add flagged products in Single Mode if needed.                                                                                  |
+| 2026-05-14 | Ignore same-texture price differences under 5 cents and use the first encountered price.               | Small Hextom/export rounding differences should not block the workflow.                                                                            |
+| 2026-05-14 | Require one upload with the necessary `Option value 1` rows instead of three separate texture uploads. | One-file parsing is the intended workflow.                                                                                                         |
+| 2026-05-14 | Group Multi Mode CSV output by product.                                                                | Product grouping should be easier to inspect and reason about.                                                                                     |
+| 2026-05-14 | Show an upload summary alert with detected product count every time.                                   | Users need to confirm the upload aligns with their source export.                                                                                  |
+| 2026-05-14 | Treat price differences of 5 cents or more as conflicts.                                               | Differences at or above the threshold should be reviewed.                                                                                          |
+| 2026-05-14 | Warn and ignore weight when weight varies within the same handle/texture group.                        | Weight can be manually added later and should not overcomplicate the first Multi Mode version.                                                     |
+| 2026-05-14 | Multi Mode exports the whole uploaded file.                                                            | The user wants one export for all detected texture groups.                                                                                         |
+| 2026-05-14 | Warnings show affected handles first with pop-out/inspect details.                                     | Keeps warning UI compact while preserving row-level detail when needed.                                                                            |
+| 2026-05-18 | Generated variants preview renders one product first, then reveals 4 more products per click.          | Large Multi Mode exports should stay responsive while full copy/download output remains available.                                                 |
+| 2026-05-18 | Add Color Expansion Mode is the next iteration.                                                        | Adding a new color needs FT singles, DT base/new-color pairs, and DP ordered pairs containing the new color without regenerating old combinations. |
+| 2026-05-18 | Implemented Add Color Expansion Mode with separate existing, new, and DT base color selections.        | The tool can now generate Signal Violet-style additions without exporting old existing-color combinations.                                         |
+| 2026-05-18 | Absolute Multi Mode uses FT price math only as a conflict-resolution guide.                            | The formula helps choose between conflicting uploaded prices, but it should not create warnings or calculate generated export prices by itself.    |

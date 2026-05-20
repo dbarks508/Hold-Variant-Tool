@@ -51,6 +51,7 @@ function getAbsoluteExpectedPrices(groups = [], selectedMfgr) {
     const price = parsePrice(group.price);
 
     if (
+      !group.excluded &&
       group.texture === "FT" &&
       price !== null &&
       !pricesByHandle.has(group.handle)
@@ -62,6 +63,10 @@ function getAbsoluteExpectedPrices(groups = [], selectedMfgr) {
   }, new Map());
 
   return groups.reduce((expectedPrices, group) => {
+    if (group.excluded) {
+      return expectedPrices;
+    }
+
     const multiplier = ABSOLUTE_PRICE_MULTIPLIERS[group.texture];
     const ftPrice = ftPricesByHandle.get(group.handle);
 
@@ -78,27 +83,61 @@ function getAbsoluteExpectedPrices(groups = [], selectedMfgr) {
   }, new Map());
 }
 
-function addAbsolutePriceGuides(warnings = [], groups = [], selectedMfgr) {
+function getAbsolutePriceSuggestions(groups = [], selectedMfgr) {
   const expectedPrices = getAbsoluteExpectedPrices(groups, selectedMfgr);
 
   if (expectedPrices.size === 0) {
-    return warnings;
+    return [];
   }
 
-  return warnings.map((warning) => {
-    if (warning.type !== "price-conflict") {
-      return warning;
-    }
+  const rows = groups
+    .filter((group) => !group.excluded)
+    .flatMap((group) => {
+      const expectedPrice = expectedPrices.get(`${group.handle}|${group.texture}`);
+      const actualPrice = parsePrice(group.price);
+      const expectedPriceNumber = parsePrice(expectedPrice);
 
-    return {
-      ...warning,
-      rows: warning.rows.map((row) => ({
-        ...row,
-        expectedPrice:
-          expectedPrices.get(`${row.handle}|${row.texture}`) || row.expectedPrice,
-      })),
-    };
-  });
+      if (
+        !expectedPrice ||
+        actualPrice === null ||
+        expectedPriceNumber === null ||
+        Math.abs(actualPrice - expectedPriceNumber) < 0.05
+      ) {
+        return [];
+      }
+
+      return {
+        ...group.rows[0],
+        price: group.price,
+        expectedPrice,
+        issueDetail: "Pricing may not match Absolute FT business logic.",
+      };
+    });
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  return [
+    {
+      type: "price-suggestion",
+      label: "Needs review: price suggestions",
+      handles: [...new Set(rows.map((row) => row.handle).filter(Boolean))],
+      rows,
+      copyRows: groups
+        .filter((group) =>
+          rows.some((row) => row.handle === group.handle),
+        )
+        .flatMap((group) => group.rows),
+      originalHeaders: [
+        ...new Set(
+          rows.flatMap((row) =>
+            row.originalRow ? Object.keys(row.originalRow) : [],
+          ),
+        ),
+      ],
+    },
+  ];
 }
 
 function App() {
@@ -207,20 +246,23 @@ function App() {
     selectedNewColors,
     selectedExistingColors: effectiveExistingColors,
   });
-  const uploadWarnings = addAbsolutePriceGuides(
-    multiUpload.warnings,
-    multiUpload.groups,
-    selectedMfgr,
-  );
+  const uploadWarnings = [
+    ...multiUpload.warnings,
+    ...getAbsolutePriceSuggestions(multiUpload.groups, selectedMfgr),
+  ];
   const variants = isMultiMode ? multiVariants : singleVariants;
+  const exportableProductCount =
+    multiUpload.summary?.exportableProductCount ?? multiUpload.summary?.productCount;
   const variantsPerProduct =
-    isMultiMode && multiUpload.summary?.productCount
-      ? variants.length / multiUpload.summary.productCount
+    isMultiMode && exportableProductCount
+      ? variants.length / exportableProductCount
       : 0;
   const previewSummary =
     isMultiMode && multiUpload.summary
       ? {
-          productCount: multiUpload.summary.productCount,
+          importedProductCount: multiUpload.summary.productCount,
+          productCount: exportableProductCount,
+          excludedProductCount: multiUpload.summary.excludedProductCount,
           variantsPerProduct: Number.isInteger(variantsPerProduct)
             ? variantsPerProduct
             : `${variantsPerProduct.toFixed(1)} avg`,

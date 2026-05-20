@@ -86,7 +86,7 @@ function VariantPreview({
         <div className="section-actions">
           <p>
             {summary
-              ? `${summary.productCount} products / ${summary.variantsPerProduct} variants per product / ${variants.length} total`
+              ? `${summary.importedProductCount} imported / ${summary.productCount} ready / ${summary.excludedProductCount} excluded / ${summary.variantsPerProduct} variants per ready product / ${variants.length} total`
               : `${variants.length} generated`}
             {productKeys.length > 1
               ? ` / showing ${visibleProductKeys.length} products`

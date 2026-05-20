@@ -1,10 +1,6 @@
 import { useState } from "react";
 
 function getWarningRows(warning) {
-  if (warning.type !== "price-conflict") {
-    return warning.rows;
-  }
-
   return [...warning.rows].sort((rowA, rowB) => {
     const productA = `${rowA.handle}-${rowA.texture}`;
     const productB = `${rowB.handle}-${rowB.texture}`;
@@ -21,16 +17,113 @@ function getWarningRows(warning) {
   });
 }
 
+function formatCopyValue(value) {
+  return String(value ?? "").replace(/\r?\n/g, " ").replace(/\t/g, " ");
+}
+
+function buildCopyText(warning) {
+  const rows = [...(warning.copyRows || warning.rows)]
+    .filter((row) => row.originalRow)
+    .sort((rowA, rowB) => rowA.rowNumber - rowB.rowNumber);
+  const headers =
+    warning.originalHeaders?.length > 0
+      ? warning.originalHeaders
+      : [
+          ...new Set(
+            rows.flatMap((row) => Object.keys(row.originalRow || {})),
+          ),
+        ];
+
+  return [headers, ...rows.map((row) => headers.map((header) => row.originalRow[header]))]
+    .map((row) => row.map(formatCopyValue).join("\t"))
+    .join("\n");
+}
+
+function buildAllCopyText(warnings) {
+  return warnings
+    .map((warning) => buildCopyText(warning))
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+async function copyText(text) {
+  if (!text) {
+    return false;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  textArea.setSelectionRange(0, textArea.value.length);
+
+  try {
+    if (document.execCommand("copy")) {
+      document.body.removeChild(textArea);
+      return true;
+    }
+  } catch {
+    // Try the async clipboard API below.
+  }
+
+  document.body.removeChild(textArea);
+
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 function UploadWarnings({ warnings = [] }) {
   const [openWarning, setOpenWarning] = useState(null);
+  const [copyStatus, setCopyStatus] = useState("");
 
   if (warnings.length === 0) {
     return null;
   }
 
+  async function copyAllWarnings() {
+    const didCopy = await copyText(buildAllCopyText(warnings));
+
+    setCopyStatus(didCopy ? "Copied" : "Copy failed");
+    window.setTimeout(() => setCopyStatus(""), 1600);
+  }
+
   return (
     <section className="tool-section tool-section--warning">
-      <h2>Upload Warnings</h2>
+      <div className="review-heading">
+        <h2>Upload Review</h2>
+        <button
+          className="secondary-button warning-copy-button"
+          type="button"
+          aria-label="Copy upload review rows"
+          title={copyStatus || "Copy review rows"}
+          onClick={copyAllWarnings}
+        >
+          <svg
+            aria-hidden="true"
+            className="warning-copy-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <rect x="9" y="9" width="10" height="10" rx="2" />
+            <path d="M5 15V7a2 2 0 0 1 2-2h8" />
+          </svg>
+        </button>
+        {copyStatus && <span className="copy-status">{copyStatus}</span>}
+      </div>
 
       <div className="warning-list">
         {warnings.map((warning, index) => {
@@ -42,6 +135,8 @@ function UploadWarnings({ warnings = [] }) {
           const summaryText =
             warning.type === "price-conflict"
               ? `${warning.handles.length} price conflict groups`
+              : warning.type === "price-suggestion"
+                ? `${warning.handles.length} products to review`
               : handles;
 
           return (
@@ -69,7 +164,7 @@ function UploadWarnings({ warnings = [] }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {warningRows.map((row) => {
+                      {warningRows.map((row, rowIndex) => {
                         const isPriceConflict =
                           warning.type === "price-conflict" &&
                           row.priceWarningRole === "conflict";
@@ -82,7 +177,7 @@ function UploadWarnings({ warnings = [] }) {
                             className={
                               isPriceConflict ? "warning-row--conflict" : ""
                             }
-                            key={`${row.rowNumber}-${row.handle}-${row.optionValue}`}
+                            key={`${row.rowNumber}-${row.handle}-${row.optionValue}-${rowIndex}`}
                           >
                             <td>{row.rowNumber}</td>
                             <td>{row.handle}</td>
@@ -102,9 +197,10 @@ function UploadWarnings({ warnings = [] }) {
                               )}
                               {row.expectedPrice && (
                                 <span>
-                                  Guide: {row.expectedPrice} from FT math
+                                  Suggestion: {row.expectedPrice} from FT math
                                 </span>
                               )}
+                              {row.issueDetail && <span>{row.issueDetail}</span>}
                               {isUsedPrice && <span>Used price</span>}
                             </td>
                             <td>{row.weight}</td>
