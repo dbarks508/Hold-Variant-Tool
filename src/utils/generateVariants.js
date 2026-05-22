@@ -90,6 +90,22 @@ export function generateVariants({
     });
   }
 
+  function hasNewColorPair(color1, color2, newColors) {
+    return newColors.some(
+      (newColor) => isSameColor(newColor, color1) || isSameColor(newColor, color2),
+    );
+  }
+
+  function addNewColorOrderedPairs(pairColors, newColors, texture, price) {
+    pairColors.forEach((color1) => {
+      pairColors.forEach((color2) => {
+        if (hasNewColorPair(color1, color2, newColors)) {
+          addPairVariant(color1, color2, texture, price);
+        }
+      });
+    });
+  }
+
   selectedTextures.forEach((texture) => {
     if (selectedMfgr.code === "compx" && texture.code !== "FT") {
       return;
@@ -109,17 +125,7 @@ export function generateVariants({
 
     if (texture.mode === "pair" && texture.code === "DP") {
       if (isAddColorMode) {
-        pairColors.forEach((color1) => {
-          pairColors.forEach((color2) => {
-            const hasNewColor = newColors.some(
-              (newColor) => isSameColor(newColor, color1) || isSameColor(newColor, color2),
-            );
-
-            if (hasNewColor) {
-              addPairVariant(color1, color2, texture, price);
-            }
-          });
-        });
+        addNewColorOrderedPairs(pairColors, newColors, texture, price);
       } else {
         selectedColors.forEach((color1) => {
           selectedColors.forEach((color2) => {
@@ -130,6 +136,11 @@ export function generateVariants({
     }
 
     if (texture.mode === "pair" && texture.code === "DT") {
+      if (isAddColorMode && selectedMfgr.code === "supr") {
+        addNewColorOrderedPairs(pairColors, newColors, texture, price);
+        return;
+      }
+
       const baseColors =
         selectedMfgr.code === "absolute" ? selectedDtBaseColors : pairColors;
       const insetColors = isAddColorMode ? newColors : selectedColors;
