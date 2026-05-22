@@ -51,10 +51,11 @@ export function generateVariants({
       return;
     }
 
+    const usesFullTextureSuffix = ["absolute", "supr"].includes(
+      selectedMfgr.code,
+    );
     const textureSuffix =
-      selectedMfgr.code === "absolute" && texture.code === "FT"
-        ? `(${texture.code})`
-        : "";
+      usesFullTextureSuffix && texture.code === "FT" ? `(${texture.code})` : "";
 
     variants.push({
       title: `${formatColorName(color)} - ${texture.code}`,
