@@ -7,4 +7,8 @@ export const manufacturers = [
     code: "absolute",
     label: "Absolute",
   },
+  {
+    code: "supr",
+    label: "Supr",
+  },
 ];

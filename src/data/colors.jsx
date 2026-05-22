@@ -4,6 +4,7 @@ export const colors = [
     codes: {
       compx: "CX311-12",
       absolute: "AB111-12",
+      supr: "SP211-12",
     },
   },
   {
@@ -11,6 +12,7 @@ export const colors = [
     codes: {
       compx: "CX014-01",
       absolute: "AB114-01",
+      supr: "SP014-01",
     },
   },
   {
@@ -18,6 +20,7 @@ export const colors = [
     codes: {
       compx: "CX015-12",
       absolute: "AB115-12",
+      supr: "SP215-12",
     },
   },
   {
@@ -25,6 +28,7 @@ export const colors = [
     codes: {
       compx: "CX016-16",
       absolute: "AB116-16",
+      supr: "SP016-16",
     },
   },
   {
@@ -32,6 +36,7 @@ export const colors = [
     codes: {
       compx: "CX213-01",
       absolute: "AB213-01",
+      supr: "SP213-01",
     },
   },
   {
@@ -46,6 +51,7 @@ export const colors = [
     codes: {
       compx: "CX211-26",
       absolute: "AB211-26",
+      supr: "SP311-26",
     },
   },
   {
@@ -53,6 +59,7 @@ export const colors = [
     codes: {
       compx: "CX018-01",
       absolute: "AB018-01",
+      supr: "SP018-01",
     },
   },
   {
@@ -60,6 +67,7 @@ export const colors = [
     codes: {
       compx: "CX012-01",
       absolute: "AB112-01",
+      supr: "SP012-01",
     },
   },
   {
@@ -79,6 +87,7 @@ export const colors = [
     codes: {
       compx: "CX216-09",
       absolute: "AB116-09",
+      supr: "SP116-09",
     },
   },
   {
@@ -98,6 +107,13 @@ export const colors = [
     name: "mint",
     codes: {
       absolute: "AB016-27",
+      supr: "SP016-27",
+    },
+  },
+  {
+    name: "signal violet",
+    codes: {
+      supr: "SP317-18",
     },
   },
 ];
