@@ -4,15 +4,17 @@ function HextomUpload({
   isParsing,
   summary,
   onFileChange,
+  isNewProductMode = false,
 }) {
   const textureCounts = summary?.productCountByTexture || {};
   const exportableProductCount =
     summary?.exportableProductCount ?? summary?.productCount ?? 0;
   const excludedProductCount = summary?.excludedProductCount ?? 0;
+  const isPriceSheet = summary?.inputFormat === "new-product-prices";
 
   return (
     <section className="tool-section">
-      <h2>Hextom Export</h2>
+      <h2>{isNewProductMode ? "New Product Price Sheet" : "Hextom Export"}</h2>
 
       <label className="file-drop">
         <span className="field-label">Upload CSV or XLSX</span>
@@ -22,8 +24,9 @@ function HextomUpload({
           onChange={(event) => onFileChange(event.target.files?.[0] || null)}
         />
         <span className="file-help">
-          Export must include Product handle, Variant price, Variant weight, and
-          Option value 1.
+          {isNewProductMode
+            ? "Upload a CSV or XLSX with a handle column and any of these price columns: FT price, DT price, DP price. An optional Weight column overrides Default Weight for that product. Prices export with two decimal places."
+            : "Export must include Product handle, Variant price, Variant weight, and Option value 1."}
         </span>
       </label>
 
@@ -43,7 +46,9 @@ function HextomUpload({
             <strong>{excludedProductCount}</strong> excluded from export.
           </p>
           <p className="export-status-detail">
-            {summary.parsedRowCount} export rows parsed.
+            {isPriceSheet
+              ? `${summary.priceSheetRowCount} product price rows / ${summary.parsedRowCount} texture prices parsed.`
+              : `${summary.parsedRowCount} export rows parsed.`}
           </p>
           <dl className="summary-grid">
             <div>

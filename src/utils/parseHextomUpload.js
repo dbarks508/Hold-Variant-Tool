@@ -22,6 +22,14 @@ const REQUIRED_HEADERS = [
 
 const TEXTURE_ORDER = ["FT", "DT", "DP"];
 
+const NEW_PRODUCT_PRICE_HEADERS = {
+  handle: ["Handle", "Product handle"],
+  weight: ["Weight", "Variant weight"],
+  FT: ["FT price", "Price FT", "FT", "Full Texture price"],
+  DT: ["DT price", "Price DT", "DT", "Dual Tex price"],
+  DP: ["DP price", "Price DP", "DP", "Dual-Tex Premium price"],
+};
+
 function normalizeHeader(header) {
   return String(header || "").trim().toLowerCase();
 }
@@ -53,6 +61,12 @@ function getHeaderKey(headerMap, headerConfig) {
   const matchedAlias = headerConfig.aliases.find(
     (alias) => headerMap[normalizeHeader(alias)],
   );
+
+  return matchedAlias ? headerMap[normalizeHeader(matchedAlias)] : "";
+}
+
+function getAliasHeaderKey(headerMap, aliases = []) {
+  const matchedAlias = aliases.find((alias) => headerMap[normalizeHeader(alias)]);
 
   return matchedAlias ? headerMap[normalizeHeader(matchedAlias)] : "";
 }
@@ -212,13 +226,13 @@ function buildParsedUpload(rows) {
     );
     const texture = detectTexture(optionValue);
     const sourceRow = {
-      rowNumber: rowIndex + 2,
+      rowNumber: row.__sourceRowNumber || rowIndex + 2,
       handle,
       price,
       weight,
       optionValue,
       texture,
-      originalRow: row,
+      originalRow: row.__originalRow || row,
     };
 
     sourceRows.push(sourceRow);
@@ -423,17 +437,110 @@ function buildParsedUpload(rows) {
   };
 }
 
+function hasNewProductPriceHeaders(rows) {
+  if (rows.length === 0) {
+    return false;
+  }
+
+  const headerMap = buildHeaderMap(rows[0]);
+  const handleHeader = getAliasHeaderKey(
+    headerMap,
+    NEW_PRODUCT_PRICE_HEADERS.handle,
+  );
+  const hasTexturePrice = TEXTURE_ORDER.some((texture) =>
+    getAliasHeaderKey(headerMap, NEW_PRODUCT_PRICE_HEADERS[texture]),
+  );
+
+  return Boolean(handleHeader && hasTexturePrice);
+}
+
+function buildNewProductPriceUpload(rows) {
+  const headerMap = buildHeaderMap(rows[0]);
+  const handleHeader = getAliasHeaderKey(
+    headerMap,
+    NEW_PRODUCT_PRICE_HEADERS.handle,
+  );
+  const weightHeader = getAliasHeaderKey(
+    headerMap,
+    NEW_PRODUCT_PRICE_HEADERS.weight,
+  );
+  const priceHeaders = Object.fromEntries(
+    TEXTURE_ORDER.map((texture) => [
+      texture,
+      getAliasHeaderKey(headerMap, NEW_PRODUCT_PRICE_HEADERS[texture]),
+    ]),
+  );
+  const normalizedRows = rows.flatMap((row, rowIndex) => {
+    const handle = normalizeValue(row[handleHeader]);
+    const weight = weightHeader ? normalizeValue(row[weightHeader]) : "";
+
+    return TEXTURE_ORDER.flatMap((texture) => {
+      const priceHeader = priceHeaders[texture];
+      const price = priceHeader ? normalizeValue(row[priceHeader]) : "";
+
+      if (!price) {
+        return [];
+      }
+
+      return [
+        {
+          "Product handle": handle,
+          "Variant price": price,
+          "Variant weight": weight,
+          "Option value 1": `New Product - ${texture}`,
+          __sourceRowNumber: rowIndex + 2,
+          __originalRow: row,
+        },
+      ];
+    });
+  });
+
+  if (normalizedRows.length === 0) {
+    throw new Error(
+      "The New Product price sheet does not contain any FT, DT, or DP prices.",
+    );
+  }
+
+  const parsedUpload = buildParsedUpload(normalizedRows);
+
+  return {
+    ...parsedUpload,
+    inputFormat: "new-product-prices",
+    summary: {
+      ...parsedUpload.summary,
+      inputFormat: "new-product-prices",
+      priceSheetRowCount: rows.length,
+    },
+  };
+}
+
 export async function parseHextomUpload(file) {
   const extension = getFileExtension(file.name);
+  let rows;
 
   if (extension === "csv") {
-    return buildParsedUpload(parseCsv(await file.text()));
+    rows = parseCsv(await file.text());
+  } else if (extension === "xlsx" || extension === "xls") {
+    rows = parseXlsx(await file.arrayBuffer());
+  } else {
+    throw new Error(
+      "Upload a .csv or .xlsx New Product price sheet or Hextom export.",
+    );
   }
 
-  if (extension === "xlsx" || extension === "xls") {
-    return buildParsedUpload(parseXlsx(await file.arrayBuffer()));
+  if (hasNewProductPriceHeaders(rows)) {
+    return buildNewProductPriceUpload(rows);
   }
 
-  throw new Error("Upload a .csv or .xlsx Hextom export.");
+  const parsedUpload = buildParsedUpload(rows);
+
+  return {
+    ...parsedUpload,
+    inputFormat: "hextom",
+    summary: {
+      ...parsedUpload.summary,
+      inputFormat: "hextom",
+    },
+  };
 }
 

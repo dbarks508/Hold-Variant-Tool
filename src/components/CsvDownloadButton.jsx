@@ -4,7 +4,7 @@ function CsvDownloadButton({
   variants,
   parentSku,
   weight,
-  inventoryOptions,
+  exportOptions,
   fileName,
 }) {
   const isDisabled = !variants || variants.length === 0;
@@ -15,7 +15,7 @@ function CsvDownloadButton({
       type="button"
       disabled={isDisabled}
       onClick={() =>
-        exportVariantsToCsv(variants, parentSku, weight, inventoryOptions, fileName)
+        exportVariantsToCsv(variants, parentSku, weight, exportOptions, fileName)
       }
     >
       Download CSV

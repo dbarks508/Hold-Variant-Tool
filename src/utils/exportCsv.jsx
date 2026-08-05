@@ -1,40 +1,20 @@
 import Papa from "papaparse";
 
-export function getVariantCsvRows(
-  variants = [],
-  parentSku = "",
-  weight = "",
-  inventoryOptions = {},
-) {
-  return variants.map((variant) => {
-    const row = {
-      handle: variant.handle || parentSku || "",
-      "option value 1": variant.title,
-      "variant sku": variant.sku,
-      "variant price": variant.price || "",
-      weight: variant.weight ?? weight,
-    };
+import { getVariantCsvRows } from "./buildVariantExport.js";
 
-    if (inventoryOptions.policy) {
-      row["inventory policy"] = inventoryOptions.policy;
-    }
-
-    if (inventoryOptions.tracking) {
-      row["inventory tracking"] = inventoryOptions.tracking;
-    }
-
-    return row;
-  });
-}
+export {
+  getVariantCsvHeaders,
+  getVariantCsvRows,
+} from "./buildVariantExport.js";
 
 export function buildVariantsCsv(
   variants = [],
   parentSku = "",
   weight = "",
-  inventoryOptions = {},
+  exportOptions = {},
 ) {
   return Papa.unparse(
-    getVariantCsvRows(variants, parentSku, weight, inventoryOptions),
+    getVariantCsvRows(variants, parentSku, weight, exportOptions),
   );
 }
 
@@ -42,14 +22,14 @@ export function exportVariantsToCsv(
   variants,
   parentSku = "variants",
   weight = "",
-  inventoryOptions = {},
+  exportOptions = {},
   fileName = "",
 ) {
   if (!variants || variants.length === 0) {
     return;
   }
 
-  const csv = buildVariantsCsv(variants, parentSku, weight, inventoryOptions);
+  const csv = buildVariantsCsv(variants, parentSku, weight, exportOptions);
 
   const blob = new Blob([csv], {
     type: "text/csv;charset=utf-8;",

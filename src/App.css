@@ -88,6 +88,34 @@
   gap: 8px;
 }
 
+.export-options-help {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.export-options-group {
+  display: grid;
+  gap: 12px;
+}
+
+.export-options-group + .export-options-group {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.export-options-group h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.export-input-grid {
+  display: grid;
+  gap: 12px;
+}
+
 .option-grid--dense {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }

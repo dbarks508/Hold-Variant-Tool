@@ -13,7 +13,7 @@ function GenerationModeToggle({ generationMode, setGenerationMode }) {
           type="button"
           onClick={() => setGenerationMode("full")}
         >
-          Full Set
+          New Product
         </button>
         <button
           className={generationMode === "add-color" ? "is-active" : ""}

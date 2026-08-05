@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { colors } from "./data/colors";
 import { textures } from "./data/textures";
+import { newProductExportDefaults } from "./data/newProductExportOptions";
 import { generateVariants } from "./utils/generateVariants";
 import {
   generateMultiVariants,
@@ -151,9 +152,9 @@ function App() {
   const [selectedMfgr, setSelectedMfgr] = useState(null);
   const [pricesByTexture, setPricesByTexture] = useState({});
   const [weight, setWeight] = useState("");
-  const [inventoryPolicyEnabled, setInventoryPolicyEnabled] = useState(false);
-  const [inventoryTrackingEnabled, setInventoryTrackingEnabled] =
-    useState(false);
+  const [newProductExportOptions, setNewProductExportOptions] = useState(
+    newProductExportDefaults,
+  );
   const [selectedDtBaseColors, setSelectedDtBaseColors] = useState([]);
   const [multiUpload, setMultiUpload] = useState({
     fileName: "",
@@ -163,11 +164,6 @@ function App() {
     error: "",
   });
   const [isParsingUpload, setIsParsingUpload] = useState(false);
-
-  const inventoryOptions = {
-    policy: inventoryPolicyEnabled ? "continue" : "",
-    tracking: inventoryTrackingEnabled ? "shopify" : "",
-  };
 
   function updateSelectedMfgr(mfgr) {
     setSelectedMfgr(mfgr);
@@ -215,6 +211,10 @@ function App() {
 
   const isMultiMode = mode === "multi";
   const isAddColorMode = generationMode === "add-color";
+  const exportOptions = {
+    ...newProductExportOptions,
+    isNewProduct: !isAddColorMode,
+  };
   const detectedTextures = getDetectedTextures(multiUpload.groups, textures);
   const activeTextures = isMultiMode ? detectedTextures : selectedTextures;
   const manufacturerColors = selectedMfgr
@@ -294,6 +294,7 @@ function App() {
                 isParsing={isParsingUpload}
                 summary={multiUpload.summary}
                 onFileChange={updateHextomUpload}
+                isNewProductMode={!isAddColorMode}
               />
               <UploadWarnings warnings={uploadWarnings} />
             </>
@@ -342,8 +343,9 @@ function App() {
               <h2>Detected Textures</h2>
               {detectedTextures.length === 0 ? (
                 <p className="empty-state">
-                  Upload a Hextom export with Option value 1 containing DT, FT,
-                  or DP.
+                  {isAddColorMode
+                    ? "Upload a Hextom export with Option value 1 containing DT, FT, or DP."
+                    : "Upload a New Product price sheet with FT price, DT price, and/or DP price columns."}
                 </p>
               ) : (
                 <div className="detected-textures">
@@ -377,23 +379,33 @@ function App() {
           />
 
           {!isMultiMode && (
-            <>
-              <TexturePriceInputs
-                selectedTextures={selectedTextures}
-                pricesByTexture={pricesByTexture}
-                setPricesByTexture={setPricesByTexture}
-              />
-
-              <WeightInput weight={weight} setWeight={setWeight} />
-            </>
+            <TexturePriceInputs
+              selectedTextures={selectedTextures}
+              pricesByTexture={pricesByTexture}
+              setPricesByTexture={setPricesByTexture}
+            />
           )}
 
-          <InventoryExportOptions
-            inventoryPolicyEnabled={inventoryPolicyEnabled}
-            setInventoryPolicyEnabled={setInventoryPolicyEnabled}
-            inventoryTrackingEnabled={inventoryTrackingEnabled}
-            setInventoryTrackingEnabled={setInventoryTrackingEnabled}
-          />
+          {(!isMultiMode || !isAddColorMode) && (
+            <WeightInput
+              weight={weight}
+              setWeight={setWeight}
+              label={isMultiMode ? "Default Weight" : "Weight"}
+              helpText={
+                isMultiMode
+                  ? "Used when a New Product price sheet does not include a Weight column."
+                  : ""
+              }
+            />
+          )}
+
+          {!isAddColorMode && (
+            <InventoryExportOptions
+              options={newProductExportOptions}
+              setOptions={setNewProductExportOptions}
+              isMultiMode={isMultiMode}
+            />
+          )}
         </div>
 
         <div className="preview-panel">
@@ -401,7 +413,7 @@ function App() {
             variants={variants}
             parentSku={parentSku}
             weight={weight}
-            inventoryOptions={inventoryOptions}
+            exportOptions={exportOptions}
             summary={previewSummary}
             actions={
               <>
@@ -409,13 +421,13 @@ function App() {
                   variants={variants}
                   parentSku={parentSku}
                   weight={weight}
-                  inventoryOptions={inventoryOptions}
+                  exportOptions={exportOptions}
                 />
                 <CsvDownloadButton
                   variants={variants}
                   parentSku={parentSku}
                   weight={weight}
-                  inventoryOptions={inventoryOptions}
+                  exportOptions={exportOptions}
                   fileName={exportFileName}
                 />
               </>

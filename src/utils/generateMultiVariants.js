@@ -54,7 +54,7 @@ export function generateMultiVariants({
     }).map((variant) => ({
       ...variant,
       handle: group.handle,
-      weight: group.weight,
+      weight: group.weight || undefined,
     }));
   });
 }

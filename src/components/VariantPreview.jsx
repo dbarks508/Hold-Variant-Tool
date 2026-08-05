@@ -1,20 +1,15 @@
 import { useMemo, useState } from "react";
 
-import { getVariantCsvRows } from "../utils/exportCsv";
-
-const copyHeaders = [
-  "handle",
-  "option value 1",
-  "variant sku",
-  "variant price",
-  "weight",
-];
+import {
+  getVariantCsvHeaders,
+  getVariantCsvRows,
+} from "../utils/exportCsv";
 
 function VariantPreview({
   variants = [],
   parentSku = "",
   weight = "",
-  inventoryOptions = {},
+  exportOptions = {},
   summary = null,
   actions = null,
 }) {
@@ -54,11 +49,12 @@ function VariantPreview({
   const revealCount = Math.min(4, remainingProductCount);
 
   async function copyTable() {
+    const copyHeaders = getVariantCsvHeaders(exportOptions);
     const rows = getVariantCsvRows(
       variants,
       parentSku,
       weight,
-      inventoryOptions,
+      exportOptions,
     ).map((row) => copyHeaders.map((header) => row[header]));
     const tableText = [copyHeaders, ...rows]
       .map((row) => row.map((value) => value || "").join("\t"))
