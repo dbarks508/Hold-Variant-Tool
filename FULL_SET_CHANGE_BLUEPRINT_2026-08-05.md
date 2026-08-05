@@ -104,7 +104,9 @@ Rules:
 - Blank texture-price cells are skipped for that product.
 - Each nonblank price cell becomes one handle/texture group.
 - Uploaded prices are normalized to two decimal places for export.
-- Weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID are required and must contain a nonblank value on every product row.
+- Weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID columns are required.
+- If a required column has exactly one unique nonblank value in the entire sheet, blank cells inherit that shared value. This supports shared batch values such as `product type = Grips` without repeating them on every row.
+- If a required column has multiple different nonblank values, every row must supply its own value because a blank would be ambiguous.
 - Missing required headers or row values stop parsing and identify the missing fields and affected row numbers.
 - The remaining New Product selections work normally as shared defaults across the uploaded products.
 - Product-level UI values are written once for each handle; variant-level UI values are written on every generated row.
@@ -182,6 +184,8 @@ Implemented override behavior:
 - [x] Three-decimal uploaded prices normalize to two decimal places.
 - [x] New Product Multi Mode requires weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID headers and values for every handle.
 - [x] Missing required headers and row values produce targeted upload errors.
+- [x] Blank required cells inherit the column's value when the sheet contains exactly one unique nonblank value.
+- [x] Blank required cells still error when the column contains multiple possible values.
 - [x] Uploaded product title, QuickBooks ID, tags, metafields, and other product fields override UI defaults per handle.
 - [x] Uploaded shipping, tracking, inventory, and other variant fields override UI defaults on every variant for that handle.
 - [x] Blank optional upload cells fall back to the shared UI defaults.

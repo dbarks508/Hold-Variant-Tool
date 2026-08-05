@@ -63,11 +63,13 @@ function HextomUpload({
           <span className="file-help">
             Weight, product title, product type, product tags, qty.total,
             inventory quantity, and quickbooks.pID are required for every
-            handle. Other optional per-product columns override the matching
-            New Product choices for that handle. Blank or missing optional
-            columns use the choices below. Supported optional columns: option
-            name 1, requires shipping, inventory policy, inventory tracking,
-            track quantity, vendor, and status.
+            handle. When a required column has exactly one nonblank value in
+            the sheet, blank cells in that column use that shared value. Other
+            optional per-product columns override the matching New Product
+            choices for that handle. Blank or missing optional columns use the
+            choices below. Supported optional columns: option name 1, requires
+            shipping, inventory policy, inventory tracking, track quantity,
+            vendor, and status.
           </span>
         )}
       </label>

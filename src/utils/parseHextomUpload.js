@@ -498,6 +498,22 @@ function buildNewProductPriceUpload(rows) {
     );
   }
 
+  function getSingleSharedValue(header) {
+    const uniqueValues = [
+      ...new Set(rows.map((row) => normalizeValue(row[header])).filter(Boolean)),
+    ];
+
+    return uniqueValues.length === 1 ? uniqueValues[0] : "";
+  }
+
+  const sharedWeight = getSingleSharedValue(weightHeader);
+  const sharedRequiredValues = Object.fromEntries(
+    newProductRequiredPerProductFields.map((fieldKey) => [
+      fieldKey,
+      getSingleSharedValue(exportFieldHeaders[fieldKey]),
+    ]),
+  );
+
   const rowValidationErrors = rows.flatMap((row, rowIndex) => {
     const missingValues = [];
     const handle = normalizeValue(row[handleHeader]);
@@ -514,14 +530,17 @@ function buildNewProductPriceUpload(rows) {
       missingValues.push("FT/DT/DP price");
     }
 
-    if (!normalizeValue(row[weightHeader])) {
+    if (!normalizeValue(row[weightHeader]) && !sharedWeight) {
       missingValues.push("weight");
     }
 
     newProductRequiredPerProductFields.forEach((fieldKey) => {
       const fieldHeader = exportFieldHeaders[fieldKey];
 
-      if (!normalizeValue(row[fieldHeader])) {
+      if (
+        !normalizeValue(row[fieldHeader]) &&
+        !sharedRequiredValues[fieldKey]
+      ) {
         missingValues.push(
           newProductUploadFields.find((field) => field.key === fieldKey)?.header,
         );
@@ -560,7 +579,9 @@ function buildNewProductPriceUpload(rows) {
 
     newProductUploadFields.forEach((field) => {
       const fieldHeader = exportFieldHeaders[field.key];
-      const value = fieldHeader ? normalizeValue(row[fieldHeader]) : "";
+      const uploadedValue = fieldHeader ? normalizeValue(row[fieldHeader]) : "";
+      const value =
+        uploadedValue || sharedRequiredValues[field.key] || "";
 
       if (!value) {
         return;
@@ -581,7 +602,9 @@ function buildNewProductPriceUpload(rows) {
   });
   const normalizedRows = rows.flatMap((row, rowIndex) => {
     const handle = normalizeValue(row[handleHeader]);
-    const weight = weightHeader ? normalizeValue(row[weightHeader]) : "";
+    const weight = weightHeader
+      ? normalizeValue(row[weightHeader]) || sharedWeight
+      : "";
 
     return TEXTURE_ORDER.flatMap((texture) => {
       const priceHeader = priceHeaders[texture];
