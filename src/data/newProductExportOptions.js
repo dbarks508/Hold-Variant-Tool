@@ -14,6 +14,29 @@ export const newProductExportDefaults = {
   inventoryQuantity: "0",
 };
 
+export const newProductPriceSheetBaseHeaders = [
+  "handle",
+  "FT price",
+  "DT price",
+  "DP price",
+  "weight",
+  "product title",
+  "product type",
+  "product tags",
+  "qty.total",
+  "inventory quantity",
+  "quickbooks.pID",
+];
+
+export const newProductRequiredPerProductFields = [
+  "quickbooksProductId",
+  "productTitle",
+  "productType",
+  "productTags",
+  "totalQuantity",
+  "inventoryQuantity",
+];
+
 export const newProductProductFields = [
   {
     key: "optionName1",
@@ -72,4 +95,35 @@ export const newProductVariantTextFields = [
     label: "Inventory quantity",
     placeholder: "Example: 0",
   },
+];
+
+export const newProductUploadFields = [
+  ...newProductProductFields.map((field) => ({
+    ...field,
+    scope: "product",
+  })),
+  {
+    key: "requiresShipping",
+    header: "requires shipping",
+    scope: "variant",
+  },
+  {
+    key: "inventoryPolicy",
+    header: "inventory policy",
+    scope: "variant",
+  },
+  {
+    key: "inventoryTracking",
+    header: "inventory tracking",
+    scope: "variant",
+  },
+  {
+    key: "trackQuantity",
+    header: "track quantity",
+    scope: "variant",
+  },
+  ...newProductVariantTextFields.map((field) => ({
+    ...field,
+    scope: "variant",
+  })),
 ];

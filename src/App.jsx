@@ -189,7 +189,9 @@ function App() {
     }));
 
     try {
-      const parsedUpload = await parseHextomUpload(file);
+      const parsedUpload = await parseHextomUpload(file, {
+        requireNewProductPriceSheet: generationMode === "full",
+      });
 
       setMultiUpload({
         fileName: file.name,
@@ -211,11 +213,25 @@ function App() {
 
   const isMultiMode = mode === "multi";
   const isAddColorMode = generationMode === "add-color";
+  const hasIncompatibleNewProductUpload =
+    isMultiMode &&
+    !isAddColorMode &&
+    multiUpload.groups.length > 0 &&
+    multiUpload.inputFormat !== "new-product-prices";
+  const activeMultiGroups = hasIncompatibleNewProductUpload
+    ? []
+    : multiUpload.groups;
+  const activeMultiSummary = hasIncompatibleNewProductUpload
+    ? null
+    : multiUpload.summary;
+  const multiUploadError = hasIncompatibleNewProductUpload
+    ? "Upload a New Product Price Sheet before generating New Product variants."
+    : multiUpload.error;
   const exportOptions = {
     ...newProductExportOptions,
     isNewProduct: !isAddColorMode,
   };
-  const detectedTextures = getDetectedTextures(multiUpload.groups, textures);
+  const detectedTextures = getDetectedTextures(activeMultiGroups, textures);
   const activeTextures = isMultiMode ? detectedTextures : selectedTextures;
   const manufacturerColors = selectedMfgr
     ? colors.filter((color) => color.codes?.[selectedMfgr.code])
@@ -237,7 +253,7 @@ function App() {
     selectedExistingColors: effectiveExistingColors,
   });
   const multiVariants = generateMultiVariants({
-    groups: multiUpload.groups,
+    groups: activeMultiGroups,
     textures,
     selectedMfgr,
     selectedColors,
@@ -246,23 +262,25 @@ function App() {
     selectedNewColors,
     selectedExistingColors: effectiveExistingColors,
   });
-  const uploadWarnings = [
-    ...multiUpload.warnings,
-    ...getAbsolutePriceSuggestions(multiUpload.groups, selectedMfgr),
-  ];
+  const uploadWarnings = hasIncompatibleNewProductUpload
+    ? []
+    : [
+        ...multiUpload.warnings,
+        ...getAbsolutePriceSuggestions(activeMultiGroups, selectedMfgr),
+      ];
   const variants = isMultiMode ? multiVariants : singleVariants;
   const exportableProductCount =
-    multiUpload.summary?.exportableProductCount ?? multiUpload.summary?.productCount;
+    activeMultiSummary?.exportableProductCount ?? activeMultiSummary?.productCount;
   const variantsPerProduct =
     isMultiMode && exportableProductCount
       ? variants.length / exportableProductCount
       : 0;
   const previewSummary =
-    isMultiMode && multiUpload.summary
+    isMultiMode && activeMultiSummary
       ? {
-          importedProductCount: multiUpload.summary.productCount,
+          importedProductCount: activeMultiSummary.productCount,
           productCount: exportableProductCount,
-          excludedProductCount: multiUpload.summary.excludedProductCount,
+          excludedProductCount: activeMultiSummary.excludedProductCount,
           variantsPerProduct: Number.isInteger(variantsPerProduct)
             ? variantsPerProduct
             : `${variantsPerProduct.toFixed(1)} avg`,
@@ -290,9 +308,9 @@ function App() {
             <>
               <HextomUpload
                 fileName={multiUpload.fileName}
-                error={multiUpload.error}
+                error={multiUploadError}
                 isParsing={isParsingUpload}
-                summary={multiUpload.summary}
+                summary={activeMultiSummary}
                 onFileChange={updateHextomUpload}
                 isNewProductMode={!isAddColorMode}
               />
@@ -386,17 +404,8 @@ function App() {
             />
           )}
 
-          {(!isMultiMode || !isAddColorMode) && (
-            <WeightInput
-              weight={weight}
-              setWeight={setWeight}
-              label={isMultiMode ? "Default Weight" : "Weight"}
-              helpText={
-                isMultiMode
-                  ? "Used when a New Product price sheet does not include a Weight column."
-                  : ""
-              }
-            />
+          {!isMultiMode && (
+            <WeightInput weight={weight} setWeight={setWeight} />
           )}
 
           {!isAddColorMode && (

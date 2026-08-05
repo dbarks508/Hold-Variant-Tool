@@ -1,9 +1,21 @@
 import {
   newProductProductFields,
+  newProductRequiredPerProductFields,
   newProductVariantTextFields,
 } from "../data/newProductExportOptions";
 
 function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
+  const visibleProductFields = isMultiMode
+    ? newProductProductFields.filter(
+        (field) => !newProductRequiredPerProductFields.includes(field.key),
+      )
+    : newProductProductFields;
+  const visibleVariantTextFields = isMultiMode
+    ? newProductVariantTextFields.filter(
+        (field) => !newProductRequiredPerProductFields.includes(field.key),
+      )
+    : newProductVariantTextFields;
+
   function updateOption(key, value) {
     setOptions((currentOptions) => ({
       ...currentOptions,
@@ -19,7 +31,8 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
         Product fields are written once on the first row for each handle.
         Variant fields are written on every generated row. Boolean checkboxes
         export TRUE when checked and FALSE when unchecked.
-        {isMultiMode && " These values apply to every uploaded product."}
+        {isMultiMode &&
+          " These choices are defaults for every uploaded product; nonblank optional price-sheet columns override them for that handle. Product title, type, tags, total quantity, inventory quantity, and QuickBooks ID come from the required price-sheet columns."}
       </p>
 
       <div className="export-options-group">
@@ -72,7 +85,7 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
         </div>
 
         <div className="export-input-grid">
-          {newProductVariantTextFields.map((field) => (
+          {visibleVariantTextFields.map((field) => (
             <label className="field" key={field.key}>
               <span className="field-label">{field.label}</span>
               <input
@@ -91,7 +104,7 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
         <h3>Product Fields</h3>
 
         <div className="export-input-grid">
-          {newProductProductFields.map((field) => (
+          {visibleProductFields.map((field) => (
             <label className="field" key={field.key}>
               <span className="field-label">{field.label}</span>
               <input

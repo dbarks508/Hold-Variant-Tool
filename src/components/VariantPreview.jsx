@@ -49,7 +49,7 @@ function VariantPreview({
   const revealCount = Math.min(4, remainingProductCount);
 
   async function copyTable() {
-    const copyHeaders = getVariantCsvHeaders(exportOptions);
+    const copyHeaders = getVariantCsvHeaders(exportOptions, variants);
     const rows = getVariantCsvRows(
       variants,
       parentSku,

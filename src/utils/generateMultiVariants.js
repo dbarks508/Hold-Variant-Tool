@@ -55,6 +55,7 @@ export function generateMultiVariants({
       ...variant,
       handle: group.handle,
       weight: group.weight || undefined,
+      newProductExportValues: group.newProductExportValues || {},
     }));
   });
 }

@@ -11,10 +11,32 @@ const baseVariantHeaders = [
 ];
 
 function formatBoolean(value) {
+  if (typeof value === "string") {
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (["true", "yes", "1"].includes(normalizedValue)) {
+      return "TRUE";
+    }
+
+    if (["false", "no", "0"].includes(normalizedValue)) {
+      return "FALSE";
+    }
+  }
+
   return value ? "TRUE" : "FALSE";
 }
 
-export function getVariantCsvHeaders(exportOptions = {}) {
+function getUploadedValue(variant, key) {
+  const value = variant.newProductExportValues?.[key];
+
+  return value === undefined || value === "" ? undefined : value;
+}
+
+function hasUploadedValue(variants, key) {
+  return variants.some((variant) => getUploadedValue(variant, key) !== undefined);
+}
+
+export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
   if (!exportOptions.isNewProduct) {
     return ["handle", ...baseVariantHeaders];
   }
@@ -24,8 +46,12 @@ export function getVariantCsvHeaders(exportOptions = {}) {
     "option name 1",
     ...baseVariantHeaders,
     "requires shipping",
-    ...(exportOptions.inventoryPolicyEnabled ? ["inventory policy"] : []),
-    ...(exportOptions.inventoryTrackingEnabled
+    ...(exportOptions.inventoryPolicyEnabled ||
+    hasUploadedValue(variants, "inventoryPolicy")
+      ? ["inventory policy"]
+      : []),
+    ...(exportOptions.inventoryTrackingEnabled ||
+    hasUploadedValue(variants, "inventoryTracking")
       ? ["inventory tracking"]
       : []),
     "track quantity",
@@ -42,7 +68,7 @@ export function getVariantCsvRows(
   weight = "",
   exportOptions = {},
 ) {
-  const headers = getVariantCsvHeaders(exportOptions);
+  const headers = getVariantCsvHeaders(exportOptions, variants);
   const seenHandles = new Set();
 
   return variants.map((variant) => {
@@ -60,31 +86,46 @@ export function getVariantCsvRows(
 
     if (exportOptions.isNewProduct) {
       values["option name 1"] = isFirstProductRow
-        ? exportOptions.optionName1 || ""
+        ? getUploadedValue(variant, "optionName1") ||
+          exportOptions.optionName1 ||
+          ""
         : "";
       values["requires shipping"] = formatBoolean(
-        exportOptions.requiresShipping,
+        getUploadedValue(variant, "requiresShipping") ??
+          exportOptions.requiresShipping,
       );
-      values["track quantity"] = formatBoolean(exportOptions.trackQuantity);
+      values["track quantity"] = formatBoolean(
+        getUploadedValue(variant, "trackQuantity") ??
+          exportOptions.trackQuantity,
+      );
 
       newProductVariantTextFields.forEach((field) => {
-        values[field.header] = exportOptions[field.key] ?? "";
+        values[field.header] =
+          getUploadedValue(variant, field.key) ??
+          exportOptions[field.key] ??
+          "";
       });
 
       newProductProductFields
         .filter((field) => field.key !== "optionName1")
         .forEach((field) => {
           values[field.header] = isFirstProductRow
-            ? exportOptions[field.key] || ""
+            ? getUploadedValue(variant, field.key) ||
+              exportOptions[field.key] ||
+              ""
             : "";
         });
 
-      if (exportOptions.inventoryPolicyEnabled) {
-        values["inventory policy"] = "continue";
+      if (headers.includes("inventory policy")) {
+        values["inventory policy"] =
+          getUploadedValue(variant, "inventoryPolicy") ||
+          (exportOptions.inventoryPolicyEnabled ? "continue" : "");
       }
 
-      if (exportOptions.inventoryTrackingEnabled) {
-        values["inventory tracking"] = "shopify";
+      if (headers.includes("inventory tracking")) {
+        values["inventory tracking"] =
+          getUploadedValue(variant, "inventoryTracking") ||
+          (exportOptions.inventoryTrackingEnabled ? "shopify" : "");
       }
     }
 

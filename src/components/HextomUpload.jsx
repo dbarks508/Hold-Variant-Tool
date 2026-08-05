@@ -1,3 +1,7 @@
+import { useState } from "react";
+
+import { newProductPriceSheetBaseHeaders } from "../data/newProductExportOptions";
+
 function HextomUpload({
   fileName,
   error,
@@ -6,11 +10,38 @@ function HextomUpload({
   onFileChange,
   isNewProductMode = false,
 }) {
+  const [copyStatus, setCopyStatus] = useState("");
   const textureCounts = summary?.productCountByTexture || {};
   const exportableProductCount =
     summary?.exportableProductCount ?? summary?.productCount ?? 0;
   const excludedProductCount = summary?.excludedProductCount ?? 0;
   const isPriceSheet = summary?.inputFormat === "new-product-prices";
+
+  async function copyBaseHeaders() {
+    const headerText = newProductPriceSheetBaseHeaders.join("\t");
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(headerText);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = headerText;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+
+      setCopyStatus("Copied");
+    } catch {
+      setCopyStatus("Copy failed");
+    }
+
+    window.setTimeout(() => setCopyStatus(""), 1600);
+  }
 
   return (
     <section className="tool-section">
@@ -25,10 +56,34 @@ function HextomUpload({
         />
         <span className="file-help">
           {isNewProductMode
-            ? "Upload a CSV or XLSX with a handle column and any of these price columns: FT price, DT price, DP price. An optional Weight column overrides Default Weight for that product. Prices export with two decimal places."
+            ? "Upload a CSV or XLSX with handle, weight, product title, product type, product tags, qty.total, inventory quantity, quickbooks.pID, and at least one price column: FT price, DT price, or DP price. Prices export with two decimal places."
             : "Export must include Product handle, Variant price, Variant weight, and Option value 1."}
         </span>
+        {isNewProductMode && (
+          <span className="file-help">
+            Weight, product title, product type, product tags, qty.total,
+            inventory quantity, and quickbooks.pID are required for every
+            handle. Other optional per-product columns override the matching
+            New Product choices for that handle. Blank or missing optional
+            columns use the choices below. Supported optional columns: option
+            name 1, requires shipping, inventory policy, inventory tracking,
+            track quantity, vendor, and status.
+          </span>
+        )}
       </label>
+
+      {isNewProductMode && (
+        <div className="upload-header-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={copyBaseHeaders}
+          >
+            Copy Base Headers
+          </button>
+          {copyStatus && <span className="copy-status">{copyStatus}</span>}
+        </div>
+      )}
 
       {isParsing && <p className="empty-state">Parsing export...</p>}
 

@@ -36,23 +36,23 @@ Reference inspected: `New Grips _ August - KVA025-variants.csv` (204 variant row
 | Export column | Scope | Control/source | Export value/rule |
 | ------------- | ----- | -------------- | ----------------- |
 | `handle` | Variant | Generated/uploaded handle | Every row |
-| `option name 1` | Product | Text input; default `Color` | First row per handle |
+| `option name 1` | Product | Optional upload column or text input; default `Color` | First row per handle |
 | `option value 1` | Variant | Generated variant title | Every row |
 | `variant sku` | Variant | Generated SKU | Every row |
 | `variant price` | Variant | Single Mode price or uploaded Multi Mode texture price | Every row |
-| `weight` | Variant | Single Mode input or uploaded Multi Mode weight | Every row |
-| `requires shipping` | Variant | Boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
-| `inventory policy` | Variant | Existing checkbox | Include with `continue` when enabled |
-| `inventory tracking` | Variant | Existing checkbox | Include with `shopify` when enabled |
-| `track quantity` | Variant | Boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
-| `vendor` | Product | Text input | First row per handle |
-| `qty.total` | Product metafield | Text/number input | First row per handle |
-| `status` | Product | Text input; default `draft` | First row per handle |
-| `quickbooks.pID` | Product metafield | Text input | First row per handle |
-| `product title` | Product | Text input | First row per handle |
-| `product type` | Product | Text input | First row per handle |
-| `product tags` | Product | Text input | First row per handle |
-| `inventory quantity` | Variant | Text/number input; default `0` | Every row |
+| `weight` | Variant | Single Mode input; required Multi New Product upload column | Every row |
+| `requires shipping` | Variant | Optional upload column or boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
+| `inventory policy` | Variant | Optional upload column or existing checkbox | Uploaded value, or `continue` when enabled |
+| `inventory tracking` | Variant | Optional upload column or existing checkbox | Uploaded value, or `shopify` when enabled |
+| `track quantity` | Variant | Optional upload column or boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
+| `vendor` | Product | Optional upload column or text input | First row per handle |
+| `qty.total` | Product metafield | Single Mode input; required Multi New Product upload column | First row per handle |
+| `status` | Product | Optional upload column or text input; default `draft` | First row per handle |
+| `quickbooks.pID` | Product metafield | Single Mode input; required Multi New Product upload column | First row per handle |
+| `product title` | Product | Single Mode input; required Multi New Product upload column | First row per handle |
+| `product type` | Product | Single Mode input; required Multi New Product upload column | First row per handle |
+| `product tags` | Product | Single Mode input; required Multi New Product upload column | First row per handle |
+| `inventory quantity` | Variant | Single Mode input; required Multi New Product upload column | Every row |
 
 ### New Product Options UI
 
@@ -61,18 +61,19 @@ Reference inspected: `New Grips _ August - KVA025-variants.csv` (204 variant row
 - Keep the existing inventory policy and inventory tracking choices in this panel.
 - Group product-level fields separately from variant-level fields so users know whether a value is written once or repeated.
 - Explain in the UI that product-level values are placed on the first export row for each handle.
+- Provide a `Copy Base Headers` button beside the New Product price-sheet upload. It copies tab-separated `handle`, `FT price`, `DT price`, `DP price`, `weight`, `product title`, `product type`, `product tags`, `qty.total`, `inventory quantity`, and `quickbooks.pID` headers for direct pasting into a spreadsheet.
 
 ### Multi Mode Behavior
 
 `New Product` and `Multi Mode` can work together, but values need to be divided into shared and product-specific data.
 
 - The uploaded Hextom handle, detected texture, price, and weight remain authoritative for each parsed product/texture group.
-- Shared variant-level choices from the UI apply to every generated variant for every exportable uploaded handle.
-- Shared product-level choices apply once to every uploaded handle: the value is written on the first generated row for each handle and left blank on the remaining rows for that handle.
-- A single UI input is only safe when the same value is intentionally being applied to every uploaded product.
-- Values that differ by product, such as unique titles or QuickBooks identifiers, should come from optional upload columns or a future per-product editor rather than one global input.
-- The current Hextom parser ignores extra columns. Supporting product-specific values would require explicit optional header mappings and storage on each parsed product.
-- If repeated upload rows for the same handle contain conflicting product-level values, show a review warning instead of silently choosing one.
+- Shared variant-level choices from the UI are defaults for every generated variant.
+- Shared product-level choices from the UI are defaults written once for each uploaded handle.
+- A nonblank optional price-sheet column overrides the corresponding UI choice for that handle.
+- A blank cell or missing optional column falls back to the shared UI choice.
+- Unique titles, QuickBooks IDs, tags, and other per-product values should be supplied in the price sheet.
+- If repeated price-sheet rows for the same handle contain conflicting product values, keep the first value and show a review warning.
 - Copy Table, Preview CSV, and Download CSV must use the same product-first-row logic in Multi Mode.
 - Absolute Multi Mode accepts FT, DT, and DP prices in the same Hextom file. Each handle/texture group retains its own uploaded price.
 
@@ -80,9 +81,16 @@ Reference inspected: `New Grips _ August - KVA025-variants.csv` (204 variant row
 
 New Product Multi Mode accepts a wide CSV or XLSX price sheet with one row per new product. Texture and price are detected from the column headers instead of `Option value 1`.
 
-Required header:
+Required headers:
 
 - `handle` or `Product handle`
+- `weight` or `Variant weight`
+- `product title`
+- `product type`
+- `product tags`
+- `qty.total`
+- `inventory quantity`
+- `quickbooks.pID`
 
 Supported price headers, matched case-insensitively:
 
@@ -96,24 +104,27 @@ Rules:
 - Blank texture-price cells are skipped for that product.
 - Each nonblank price cell becomes one handle/texture group.
 - Uploaded prices are normalized to two decimal places for export.
-- An optional `Weight` or `Variant weight` column supplies weight per product.
-- When the sheet has no weight value, the New Product Multi Mode `Default Weight` input is used.
-- The remaining New Product selections work normally and apply across the uploaded products.
+- Weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID are required and must contain a nonblank value on every product row.
+- Missing required headers or row values stop parsing and identify the missing fields and affected row numbers.
+- The remaining New Product selections work normally as shared defaults across the uploaded products.
 - Product-level UI values are written once for each handle; variant-level UI values are written on every generated row.
+- Optional per-product columns are matched case-insensitively: `option name 1`, `requires shipping`, `inventory policy`, `inventory tracking`, `track quantity`, `vendor`, and `status`.
+- Nonblank optional values override the UI defaults for that handle; blank or missing values use the UI defaults.
+- Uploaded boolean values accept `TRUE`/`FALSE`, `Yes`/`No`, or `1`/`0` and export as uppercase `TRUE`/`FALSE`.
 - Add Color Multi Mode continues to describe and accept the standard Hextom export workflow.
 
-Recommended first implementation:
+Implemented override behavior:
 
-1. Allow global/shared new-product options in both Single and Multi Mode.
-2. In Multi Mode, clearly label them as applying to all uploaded products.
-3. Add optional upload-column mappings for any field that must vary by handle after the exact source columns are confirmed.
-4. Defer a per-product editing table unless the upload cannot reliably provide those unique values.
+1. Use the New Product UI choices as batch defaults.
+2. Read optional values from each handle's price-sheet row.
+3. Prefer a nonblank uploaded value over its UI default.
+4. Preserve product fields on the first row per handle and variant fields on every row.
+5. Use the resolved values in Copy Table, Preview CSV, and Download CSV.
 
 ### Open Items For Review
 
 - Review the initial defaults: `Color`, requires shipping checked, track quantity checked, `draft`, and inventory quantity `0`.
 - Confirm that normalizing the source header `inventory quantity ` to `inventory quantity` is desired.
-- Decide later whether Multi Mode values that differ by handle should come from optional upload columns or a per-product editor.
 
 ## Product Details To Capture
 
@@ -142,7 +153,7 @@ Recommended first implementation:
 - Product fields are written on the first row of each handle only.
 - Variant fields are written on every generated row.
 - Copy Table, Preview CSV, and Download CSV share the same header and row builder.
-- Multi Mode UI values apply to all uploaded products, with product fields repeated once per handle.
+- Multi Mode UI values are shared defaults; nonblank uploaded values override them per handle.
 
 ## Implementation Plan
 
@@ -152,8 +163,9 @@ Recommended first implementation:
 4. [x] Add the New Product-only product and variant export controls.
 5. [x] Output product fields on the first row per handle and variant fields on every row.
 6. [x] Use the shared output for Copy Table, Preview CSV, and Download CSV.
-7. [x] Label Multi Mode values as applying to every uploaded product.
-8. [ ] Add optional per-handle upload mappings only if a future workflow requires different values per uploaded product.
+7. [x] Label Multi Mode UI values as shared defaults.
+8. [x] Add optional per-handle mappings for every New Product input/output field.
+9. [x] Make nonblank uploaded values override shared defaults in every output action.
 
 ## Verification Plan
 
@@ -168,7 +180,13 @@ Recommended first implementation:
 - [x] Absolute Multi Mode preserves separate uploaded FT, DT, and DP prices.
 - [x] A 16-row New Product price sheet produces 16 products and 48 FT/DT/DP groups.
 - [x] Three-decimal uploaded prices normalize to two decimal places.
-- [x] Default Weight fills exports when the price sheet has no Weight column.
+- [x] New Product Multi Mode requires weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID headers and values for every handle.
+- [x] Missing required headers and row values produce targeted upload errors.
+- [x] Uploaded product title, QuickBooks ID, tags, metafields, and other product fields override UI defaults per handle.
+- [x] Uploaded shipping, tracking, inventory, and other variant fields override UI defaults on every variant for that handle.
+- [x] Blank optional upload cells fall back to the shared UI defaults.
+- [x] Uploaded boolean values normalize from true/false, yes/no, and 1/0.
+- [x] Copy Base Headers copies all eleven required price-sheet headers in spreadsheet-friendly tab-separated form.
 - [x] Lint and production build pass.
 
 ## Decision Log
@@ -184,3 +202,7 @@ Recommended first implementation:
 | 2026-08-05 | Absolute Multi Mode preserves independent FT, DT, and DP upload prices. | Each handle/texture group must export its uploaded price without formula substitution. |
 | 2026-08-05 | New Product Multi Mode accepts a wide handle/FT price/DT price/DP price sheet. | New products do not have existing Hextom variant rows from which to detect texture and price. |
 | 2026-08-05 | Texture is detected from price headers for New Product price sheets. | One row per handle is easier to prepare than a long variant-style upload. |
+| 2026-08-05 | Every New Product value can be supplied as an optional price-sheet column. | Titles, QuickBooks IDs, tags, and other values can differ by handle in a multi-product batch. |
+| 2026-08-05 | Nonblank upload values override UI choices; blank or missing values use UI defaults. | This supports per-product data without requiring manual edits after export. |
+| 2026-08-05 | Copy Base Headers provides handle, texture prices, weight, title, type, tags, total quantity, inventory quantity, and QuickBooks ID. | These per-product values cannot be safely supplied as one shared UI value in Multi Mode. |
+| 2026-08-05 | Weight, product title, product type, product tags, total quantity, inventory quantity, and QuickBooks ID are required for every New Product price-sheet row. | These values belong to individual products and must remain associated with the correct handle. |

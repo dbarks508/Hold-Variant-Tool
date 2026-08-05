@@ -11,7 +11,7 @@ function CsvPreviewButton({ variants, parentSku, weight, exportOptions }) {
   const rows = isOpen
     ? getVariantCsvRows(variants, parentSku, weight, exportOptions)
     : [];
-  const csvHeaders = getVariantCsvHeaders(exportOptions);
+  const csvHeaders = getVariantCsvHeaders(exportOptions, variants);
 
   return (
     <>

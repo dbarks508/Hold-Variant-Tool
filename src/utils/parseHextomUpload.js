@@ -1,6 +1,11 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
+import {
+  newProductRequiredPerProductFields,
+  newProductUploadFields,
+} from "../data/newProductExportOptions.js";
+
 const REQUIRED_HEADERS = [
   {
     label: "Product handle",
@@ -470,6 +475,110 @@ function buildNewProductPriceUpload(rows) {
       getAliasHeaderKey(headerMap, NEW_PRODUCT_PRICE_HEADERS[texture]),
     ]),
   );
+  const exportFieldHeaders = Object.fromEntries(
+    newProductUploadFields.map((field) => [
+      field.key,
+      getAliasHeaderKey(headerMap, [field.header]),
+    ]),
+  );
+  const missingRequiredHeaders = [
+    ...(weightHeader ? [] : ["weight"]),
+    ...newProductRequiredPerProductFields
+      .filter((fieldKey) => !exportFieldHeaders[fieldKey])
+      .map(
+        (fieldKey) =>
+          newProductUploadFields.find((field) => field.key === fieldKey)?.header,
+      )
+      .filter(Boolean),
+  ];
+
+  if (missingRequiredHeaders.length > 0) {
+    throw new Error(
+      `New Product price sheet is missing required columns: ${missingRequiredHeaders.join(", ")}`,
+    );
+  }
+
+  const rowValidationErrors = rows.flatMap((row, rowIndex) => {
+    const missingValues = [];
+    const handle = normalizeValue(row[handleHeader]);
+    const hasTexturePrice = TEXTURE_ORDER.some((texture) => {
+      const priceHeader = priceHeaders[texture];
+      return priceHeader && normalizeValue(row[priceHeader]);
+    });
+
+    if (!handle) {
+      missingValues.push("handle");
+    }
+
+    if (!hasTexturePrice) {
+      missingValues.push("FT/DT/DP price");
+    }
+
+    if (!normalizeValue(row[weightHeader])) {
+      missingValues.push("weight");
+    }
+
+    newProductRequiredPerProductFields.forEach((fieldKey) => {
+      const fieldHeader = exportFieldHeaders[fieldKey];
+
+      if (!normalizeValue(row[fieldHeader])) {
+        missingValues.push(
+          newProductUploadFields.find((field) => field.key === fieldKey)?.header,
+        );
+      }
+    });
+
+    return missingValues.length > 0
+      ? [`row ${rowIndex + 2} (${missingValues.filter(Boolean).join(", ")})`]
+      : [];
+  });
+
+  if (rowValidationErrors.length > 0) {
+    const visibleErrors = rowValidationErrors.slice(0, 8);
+    const remainingErrorCount = rowValidationErrors.length - visibleErrors.length;
+
+    throw new Error(
+      `New Product price sheet has missing required values: ${visibleErrors.join("; ")}${
+        remainingErrorCount > 0
+          ? `; and ${remainingErrorCount} more rows`
+          : ""
+      }`,
+    );
+  }
+
+  const exportValuesByHandle = new Map();
+  const productFieldConflictHandles = new Set();
+
+  rows.forEach((row) => {
+    const handle = normalizeValue(row[handleHeader]);
+
+    if (!handle) {
+      return;
+    }
+
+    const currentValues = exportValuesByHandle.get(handle) || {};
+
+    newProductUploadFields.forEach((field) => {
+      const fieldHeader = exportFieldHeaders[field.key];
+      const value = fieldHeader ? normalizeValue(row[fieldHeader]) : "";
+
+      if (!value) {
+        return;
+      }
+
+      if (
+        currentValues[field.key] !== undefined &&
+        currentValues[field.key] !== value
+      ) {
+        productFieldConflictHandles.add(handle);
+        return;
+      }
+
+      currentValues[field.key] = value;
+    });
+
+    exportValuesByHandle.set(handle, currentValues);
+  });
   const normalizedRows = rows.flatMap((row, rowIndex) => {
     const handle = normalizeValue(row[handleHeader]);
     const weight = weightHeader ? normalizeValue(row[weightHeader]) : "";
@@ -502,19 +611,61 @@ function buildNewProductPriceUpload(rows) {
   }
 
   const parsedUpload = buildParsedUpload(normalizedRows);
+  const groups = parsedUpload.groups.map((group) => ({
+    ...group,
+    newProductExportValues: exportValuesByHandle.get(group.handle) || {},
+  }));
+  const productFieldConflictRows = rows.flatMap((row, rowIndex) => {
+    const handle = normalizeValue(row[handleHeader]);
+
+    if (!productFieldConflictHandles.has(handle)) {
+      return [];
+    }
+
+    return [
+      {
+        rowNumber: rowIndex + 2,
+        handle,
+        texture: "",
+        price: "",
+        weight: weightHeader ? normalizeValue(row[weightHeader]) : "",
+        optionValue: "New Product price sheet",
+        originalRow: row,
+      },
+    ];
+  });
+  const productFieldConflictWarning =
+    productFieldConflictRows.length > 0
+      ? buildHandleWarning(
+          "product-field-conflict",
+          "Needs review: conflicting product fields",
+          productFieldConflictRows,
+        )
+      : null;
 
   return {
     ...parsedUpload,
+    groups,
+    warnings: [
+      ...parsedUpload.warnings,
+      ...(productFieldConflictWarning ? [productFieldConflictWarning] : []),
+    ],
     inputFormat: "new-product-prices",
     summary: {
       ...parsedUpload.summary,
       inputFormat: "new-product-prices",
       priceSheetRowCount: rows.length,
+      conflictCount:
+        parsedUpload.summary.conflictCount +
+        (productFieldConflictWarning ? 1 : 0),
     },
   };
 }
 
-export async function parseHextomUpload(file) {
+export async function parseHextomUpload(
+  file,
+  { requireNewProductPriceSheet = false } = {},
+) {
   const extension = getFileExtension(file.name);
   let rows;
 
@@ -530,6 +681,12 @@ export async function parseHextomUpload(file) {
 
   if (hasNewProductPriceHeaders(rows)) {
     return buildNewProductPriceUpload(rows);
+  }
+
+  if (requireNewProductPriceSheet) {
+    throw new Error(
+      "New Product Multi Mode requires a New Product Price Sheet with handle, texture-price, and required per-product columns.",
+    );
   }
 
   const parsedUpload = buildParsedUpload(rows);
