@@ -43,7 +43,7 @@ Reference inspected: `New Grips _ August - KVA025-variants.csv` (204 variant row
 | `weight` | Variant | Single Mode input; required Multi New Product upload column | Every row |
 | `requires shipping` | Variant | Optional upload column or boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
 | `inventory policy` | Variant | Optional upload column or existing checkbox | Uploaded value, or `continue` when enabled |
-| `inventory tracking` | Variant | Optional upload column or existing checkbox | Uploaded value, or `shopify` when enabled |
+| `inventory tracking` | Variant | Optional upload column | Uploaded value |
 | `track quantity` | Variant | Optional upload column or boolean checkbox; default checked | `TRUE` or `FALSE` on every row |
 | `vendor` | Product | Optional upload column or text input | First row per handle |
 | `qty.total` | Product metafield | Single Mode input; required Multi New Product upload column | First row per handle |
@@ -58,7 +58,7 @@ Reference inspected: `New Grips _ August - KVA025-variants.csv` (204 variant row
 
 - Show the extended export-options panel only in `New Product` generation mode.
 - Hide it in `Add Color` mode so an add-color export does not accidentally overwrite product-level settings.
-- Keep the existing inventory policy and inventory tracking choices in this panel.
+- Keep the existing inventory policy choice in this panel.
 - Group product-level fields separately from variant-level fields so users know whether a value is written once or repeated.
 - Explain in the UI that product-level values are placed on the first export row for each handle.
 - Provide a `Copy Base Headers` button beside the New Product price-sheet upload. It copies tab-separated `handle`, `FT price`, `DT price`, `DP price`, `weight`, `product title`, `product type`, `product tags`, `qty.total`, `inventory quantity`, and `quickbooks.pID` headers for direct pasting into a spreadsheet.
@@ -151,7 +151,7 @@ Implemented override behavior:
 - The generation label is `New Product`; the internal value remains `full` for compatibility.
 - New Product export controls are hidden and excluded from output in Add Color mode.
 - Boolean fields export uppercase `TRUE` or `FALSE`.
-- Inventory policy and inventory tracking retain their existing include-when-enabled behavior.
+- Inventory policy retains its include-when-enabled behavior; inventory tracking is included when supplied by the upload.
 - Product fields are written on the first row of each handle only.
 - Variant fields are written on every generated row.
 - Copy Table, Preview CSV, and Download CSV share the same header and row builder.

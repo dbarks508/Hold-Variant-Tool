@@ -50,8 +50,7 @@ export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
     hasUploadedValue(variants, "inventoryPolicy")
       ? ["inventory policy"]
       : []),
-    ...(exportOptions.inventoryTrackingEnabled ||
-    hasUploadedValue(variants, "inventoryTracking")
+    ...(hasUploadedValue(variants, "inventoryTracking")
       ? ["inventory tracking"]
       : []),
     "track quantity",
@@ -124,8 +123,7 @@ export function getVariantCsvRows(
 
       if (headers.includes("inventory tracking")) {
         values["inventory tracking"] =
-          getUploadedValue(variant, "inventoryTracking") ||
-          (exportOptions.inventoryTrackingEnabled ? "shopify" : "");
+          getUploadedValue(variant, "inventoryTracking") || "";
       }
     }
 

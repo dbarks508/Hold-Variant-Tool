@@ -2,7 +2,6 @@ export const newProductExportDefaults = {
   optionName1: "Color",
   requiresShipping: true,
   inventoryPolicyEnabled: false,
-  inventoryTrackingEnabled: false,
   trackQuantity: true,
   vendor: "",
   totalQuantity: "",

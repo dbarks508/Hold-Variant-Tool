@@ -64,17 +64,6 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
           <label className="option-row">
             <input
               type="checkbox"
-              checked={options.inventoryTrackingEnabled}
-              onChange={(event) =>
-                updateOption("inventoryTrackingEnabled", event.target.checked)
-              }
-            />
-            <span>Inventory tracking: shopify</span>
-          </label>
-
-          <label className="option-row">
-            <input
-              type="checkbox"
               checked={options.trackQuantity}
               onChange={(event) =>
                 updateOption("trackQuantity", event.target.checked)
