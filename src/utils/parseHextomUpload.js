@@ -44,8 +44,14 @@ function normalizeValue(value) {
 }
 
 function detectTexture(optionValue) {
-  const match = normalizeValue(optionValue).match(/-\s*(DT|FT|DP)\b/i);
-  return match ? match[1].toUpperCase() : "";
+  const normalizedOptionValue = normalizeValue(optionValue);
+
+  if (!normalizedOptionValue) {
+    return "";
+  }
+
+  const match = normalizedOptionValue.match(/-\s*(DT|FT|DP)\b/i);
+  return match ? match[1].toUpperCase() : "FT";
 }
 
 function parsePrice(value) {

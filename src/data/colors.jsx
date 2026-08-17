@@ -106,6 +106,7 @@ export const colors = [
   {
     name: "mint",
     codes: {
+      compx: "CX016-27",
       absolute: "AB016-27",
       supr: "SP016-27",
     },
