@@ -19,6 +19,12 @@ function ModeToggle({ mode, setMode }) {
           Multi Mode
         </button>
       </div>
+
+      <p className="file-help">
+        {mode === "single"
+          ? "Single Mode creates variants for one handle using the fields below; no upload is needed."
+          : "Multi Mode creates variants for many handles from one CSV or XLSX upload."}
+      </p>
     </section>
   );
 }

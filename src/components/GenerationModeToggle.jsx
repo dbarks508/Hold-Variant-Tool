@@ -23,6 +23,12 @@ function GenerationModeToggle({ generationMode, setGenerationMode }) {
           Add Color
         </button>
       </div>
+
+      <p className="file-help">
+        {generationMode === "full"
+          ? "New Product creates complete product and variant import rows."
+          : "Add Color creates only new variant rows for products that already exist."}
+      </p>
     </section>
   );
 }

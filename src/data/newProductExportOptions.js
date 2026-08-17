@@ -13,11 +13,7 @@ export const newProductExportDefaults = {
   inventoryQuantity: "0",
 };
 
-export const newProductPriceSheetBaseHeaders = [
-  "handle",
-  "FT price",
-  "DT price",
-  "DP price",
+const newProductPriceSheetRequiredHeaders = [
   "weight",
   "product title",
   "product type",
@@ -25,6 +21,20 @@ export const newProductPriceSheetBaseHeaders = [
   "qty.total",
   "inventory quantity",
   "quickbooks.pID",
+];
+
+export const newProductSinglePriceSheetBaseHeaders = [
+  "handle",
+  "price",
+  ...newProductPriceSheetRequiredHeaders,
+];
+
+export const newProductPriceSheetBaseHeaders = [
+  "handle",
+  "FT price",
+  "DT price",
+  "DP price",
+  ...newProductPriceSheetRequiredHeaders,
 ];
 
 export const newProductRequiredPerProductFields = [

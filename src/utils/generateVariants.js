@@ -25,6 +25,7 @@ export function generateVariants({
   generationMode = "full",
   selectedNewColors = [],
   selectedExistingColors = [],
+  omitTextureFromTitle = false,
 }) {
   const variants = [];
 
@@ -58,7 +59,9 @@ export function generateVariants({
       usesFullTextureSuffix && texture.code === "FT" ? `(${texture.code})` : "";
 
     variants.push({
-      title: `${formatColorName(color)} - ${texture.code}`,
+      title: omitTextureFromTitle
+        ? formatColorName(color)
+        : `${formatColorName(color)} - ${texture.code}`,
       mfgr: selectedMfgr.code,
       texture: texture.code,
       color1: formatColorName(color),

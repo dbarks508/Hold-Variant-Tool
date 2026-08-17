@@ -51,6 +51,7 @@ export function generateMultiVariants({
       generationMode,
       selectedNewColors,
       selectedExistingColors,
+      omitTextureFromTitle: group.omitTextureFromTitle,
     }).map((variant) => ({
       ...variant,
       handle: group.handle,

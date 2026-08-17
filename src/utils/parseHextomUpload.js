@@ -30,6 +30,7 @@ const TEXTURE_ORDER = ["FT", "DT", "DP"];
 const NEW_PRODUCT_PRICE_HEADERS = {
   handle: ["Handle", "Product handle"],
   weight: ["Weight", "Variant weight"],
+  generic: ["Price", "Variant price"],
   FT: ["FT price", "Price FT", "FT", "Full Texture price"],
   DT: ["DT price", "Price DT", "DT", "Dual Tex price"],
   DP: ["DP price", "Price DP", "DP", "Dual-Tex Premium price"],
@@ -47,11 +48,17 @@ function detectTexture(optionValue) {
   const normalizedOptionValue = normalizeValue(optionValue);
 
   if (!normalizedOptionValue) {
-    return "";
+    return {
+      code: "",
+      isImplicit: false,
+    };
   }
 
   const match = normalizedOptionValue.match(/-\s*(DT|FT|DP)\b/i);
-  return match ? match[1].toUpperCase() : "FT";
+  return {
+    code: match ? match[1].toUpperCase() : "FT",
+    isImplicit: !match,
+  };
 }
 
 function parsePrice(value) {
@@ -235,7 +242,8 @@ function buildParsedUpload(rows) {
     const optionValue = normalizeValue(
       getRequiredValue(row, headerMap, REQUIRED_HEADERS[3]),
     );
-    const texture = detectTexture(optionValue);
+    const textureDetection = detectTexture(optionValue);
+    const texture = textureDetection.code;
     const sourceRow = {
       rowNumber: row.__sourceRowNumber || rowIndex + 2,
       handle,
@@ -243,6 +251,7 @@ function buildParsedUpload(rows) {
       weight,
       optionValue,
       texture,
+      isImplicitTexture: textureDetection.isImplicit,
       originalRow: row.__originalRow || row,
     };
 
@@ -329,6 +338,9 @@ function buildParsedUpload(rows) {
       texture: group.texture,
       price: chosenPrice,
       weight: hasWeightConflict ? "" : group.rows[0].weight,
+      omitTextureFromTitle:
+        group.texture === "FT" &&
+        group.rows.every((row) => row.isImplicitTexture),
       excluded: isExcluded,
       exclusionReasons: [
         hasGroupPriceConflict ? "price-conflict" : "",
@@ -448,7 +460,7 @@ function buildParsedUpload(rows) {
   };
 }
 
-function hasNewProductPriceHeaders(rows) {
+function hasNewProductPriceHeaders(rows, { allowGenericPrice = false } = {}) {
   if (rows.length === 0) {
     return false;
   }
@@ -461,8 +473,14 @@ function hasNewProductPriceHeaders(rows) {
   const hasTexturePrice = TEXTURE_ORDER.some((texture) =>
     getAliasHeaderKey(headerMap, NEW_PRODUCT_PRICE_HEADERS[texture]),
   );
+  const hasGenericPrice = getAliasHeaderKey(
+    headerMap,
+    NEW_PRODUCT_PRICE_HEADERS.generic,
+  );
 
-  return Boolean(handleHeader && hasTexturePrice);
+  return Boolean(
+    handleHeader && (hasTexturePrice || (allowGenericPrice && hasGenericPrice)),
+  );
 }
 
 function buildNewProductPriceUpload(rows) {
@@ -481,6 +499,13 @@ function buildNewProductPriceUpload(rows) {
       getAliasHeaderKey(headerMap, NEW_PRODUCT_PRICE_HEADERS[texture]),
     ]),
   );
+  const genericPriceHeader = getAliasHeaderKey(
+    headerMap,
+    NEW_PRODUCT_PRICE_HEADERS.generic,
+  );
+  const usesImplicitFtPrice =
+    Boolean(genericPriceHeader) &&
+    !TEXTURE_ORDER.some((texture) => priceHeaders[texture]);
   const exportFieldHeaders = Object.fromEntries(
     newProductUploadFields.map((field) => [
       field.key,
@@ -523,17 +548,19 @@ function buildNewProductPriceUpload(rows) {
   const rowValidationErrors = rows.flatMap((row, rowIndex) => {
     const missingValues = [];
     const handle = normalizeValue(row[handleHeader]);
-    const hasTexturePrice = TEXTURE_ORDER.some((texture) => {
-      const priceHeader = priceHeaders[texture];
-      return priceHeader && normalizeValue(row[priceHeader]);
-    });
+    const hasTexturePrice = usesImplicitFtPrice
+      ? normalizeValue(row[genericPriceHeader])
+      : TEXTURE_ORDER.some((texture) => {
+          const priceHeader = priceHeaders[texture];
+          return priceHeader && normalizeValue(row[priceHeader]);
+        });
 
     if (!handle) {
       missingValues.push("handle");
     }
 
     if (!hasTexturePrice) {
-      missingValues.push("FT/DT/DP price");
+      missingValues.push("price/FT/DT/DP price");
     }
 
     if (!normalizeValue(row[weightHeader]) && !sharedWeight) {
@@ -612,6 +639,25 @@ function buildNewProductPriceUpload(rows) {
       ? normalizeValue(row[weightHeader]) || sharedWeight
       : "";
 
+    if (usesImplicitFtPrice) {
+      const price = normalizeValue(row[genericPriceHeader]);
+
+      if (!price) {
+        return [];
+      }
+
+      return [
+        {
+          "Product handle": handle,
+          "Variant price": price,
+          "Variant weight": weight,
+          "Option value 1": "New Product",
+          __sourceRowNumber: rowIndex + 2,
+          __originalRow: row,
+        },
+      ];
+    }
+
     return TEXTURE_ORDER.flatMap((texture) => {
       const priceHeader = priceHeaders[texture];
       const price = priceHeader ? normalizeValue(row[priceHeader]) : "";
@@ -635,7 +681,7 @@ function buildNewProductPriceUpload(rows) {
 
   if (normalizedRows.length === 0) {
     throw new Error(
-      "The New Product price sheet does not contain any FT, DT, or DP prices.",
+      "The New Product price sheet does not contain any price, FT, DT, or DP values.",
     );
   }
 
@@ -708,13 +754,17 @@ export async function parseHextomUpload(
     );
   }
 
-  if (hasNewProductPriceHeaders(rows)) {
+  if (
+    hasNewProductPriceHeaders(rows, {
+      allowGenericPrice: requireNewProductPriceSheet,
+    })
+  ) {
     return buildNewProductPriceUpload(rows);
   }
 
   if (requireNewProductPriceSheet) {
     throw new Error(
-      "New Product Multi Mode requires a New Product Price Sheet with handle, texture-price, and required per-product columns.",
+      "New Product Multi Mode requires a New Product Price Sheet with handle, price or texture-price, and required per-product columns.",
     );
   }
 
