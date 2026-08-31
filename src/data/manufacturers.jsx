@@ -11,4 +11,8 @@ export const manufacturers = [
     code: "supr",
     label: "Supr",
   },
+  {
+    code: "aragon",
+    label: "Aragon",
+  },
 ];
