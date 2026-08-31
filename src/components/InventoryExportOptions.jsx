@@ -4,13 +4,18 @@ import {
   newProductVariantTextFields,
 } from "../data/newProductExportOptions";
 
-function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
+function InventoryExportOptions({
+  options,
+  setOptions,
+  isMultiMode = false,
+  variantOnly = false,
+}) {
   const visibleProductFields = isMultiMode
     ? newProductProductFields.filter(
         (field) => !newProductRequiredPerProductFields.includes(field.key),
       )
     : newProductProductFields;
-  const visibleVariantTextFields = isMultiMode
+  const visibleVariantTextFields = isMultiMode && !variantOnly
     ? newProductVariantTextFields.filter(
         (field) => !newProductRequiredPerProductFields.includes(field.key),
       )
@@ -25,13 +30,15 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
 
   return (
     <section className="tool-section">
-      <h2>New Product Export Options</h2>
+      <h2>
+        {variantOnly ? "Add Color Export Options" : "New Product Export Options"}
+      </h2>
 
       <p className="export-options-help">
-        Product fields are written once on the first row for each handle.
-        Variant fields are written on every generated row. Boolean checkboxes
-        export TRUE when checked and FALSE when unchecked.
-        {isMultiMode &&
+        {variantOnly
+          ? "Variant fields are written on every generated row. Boolean checkboxes export TRUE when checked and FALSE when unchecked. Inventory quantity is fixed at 0."
+          : "Product fields are written once on the first row for each handle. Variant fields are written on every generated row. Boolean checkboxes export TRUE when checked and FALSE when unchecked."}
+        {isMultiMode && !variantOnly &&
           " These choices are defaults for every uploaded product; nonblank optional price-sheet columns override them for that handle. Product title, type, tags, total quantity, inventory quantity, and QuickBooks ID come from the required price-sheet columns."}
       </p>
 
@@ -81,6 +88,7 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
                 className="text-input"
                 type="text"
                 value={options[field.key]}
+                disabled={variantOnly && field.key === "inventoryQuantity"}
                 placeholder={field.placeholder}
                 onChange={(event) => updateOption(field.key, event.target.value)}
               />
@@ -89,24 +97,28 @@ function InventoryExportOptions({ options, setOptions, isMultiMode = false }) {
         </div>
       </div>
 
-      <div className="export-options-group">
-        <h3>Product Fields</h3>
+      {!variantOnly && (
+        <div className="export-options-group">
+          <h3>Product Fields</h3>
 
-        <div className="export-input-grid">
-          {visibleProductFields.map((field) => (
-            <label className="field" key={field.key}>
-              <span className="field-label">{field.label}</span>
-              <input
-                className="text-input"
-                type="text"
-                value={options[field.key]}
-                placeholder={field.placeholder}
-                onChange={(event) => updateOption(field.key, event.target.value)}
-              />
-            </label>
-          ))}
+          <div className="export-input-grid">
+            {visibleProductFields.map((field) => (
+              <label className="field" key={field.key}>
+                <span className="field-label">{field.label}</span>
+                <input
+                  className="text-input"
+                  type="text"
+                  value={options[field.key]}
+                  placeholder={field.placeholder}
+                  onChange={(event) =>
+                    updateOption(field.key, event.target.value)
+                  }
+                />
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

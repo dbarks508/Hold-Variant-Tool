@@ -38,7 +38,14 @@ function hasUploadedValue(variants, key) {
 
 export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
   if (!exportOptions.isNewProduct) {
-    return ["handle", ...baseVariantHeaders];
+    return [
+      "handle",
+      ...baseVariantHeaders,
+      "requires shipping",
+      ...(exportOptions.inventoryPolicyEnabled ? ["inventory policy"] : []),
+      "track quantity",
+      ...newProductVariantTextFields.map((field) => field.header),
+    ];
   }
 
   return [
@@ -79,9 +86,22 @@ export function getVariantCsvRows(
       "variant sku": variant.sku,
       "variant price": variant.price || "",
       weight: variant.weight ?? weight,
+      "requires shipping": formatBoolean(exportOptions.requiresShipping),
+      "track quantity": formatBoolean(exportOptions.trackQuantity),
     };
 
     seenHandles.add(handle);
+
+    newProductVariantTextFields.forEach((field) => {
+      values[field.header] =
+        getUploadedValue(variant, field.key) ?? exportOptions[field.key] ?? "";
+    });
+
+    if (headers.includes("inventory policy")) {
+      values["inventory policy"] =
+        getUploadedValue(variant, "inventoryPolicy") ||
+        (exportOptions.inventoryPolicyEnabled ? "continue" : "");
+    }
 
     if (exportOptions.isNewProduct) {
       values["option name 1"] = isFirstProductRow
@@ -98,13 +118,6 @@ export function getVariantCsvRows(
           exportOptions.trackQuantity,
       );
 
-      newProductVariantTextFields.forEach((field) => {
-        values[field.header] =
-          getUploadedValue(variant, field.key) ??
-          exportOptions[field.key] ??
-          "";
-      });
-
       newProductProductFields
         .filter((field) => field.key !== "optionName1")
         .forEach((field) => {
@@ -114,12 +127,6 @@ export function getVariantCsvRows(
               ""
             : "";
         });
-
-      if (headers.includes("inventory policy")) {
-        values["inventory policy"] =
-          getUploadedValue(variant, "inventoryPolicy") ||
-          (exportOptions.inventoryPolicyEnabled ? "continue" : "");
-      }
 
       if (headers.includes("inventory tracking")) {
         values["inventory tracking"] =

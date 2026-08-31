@@ -231,6 +231,7 @@ function App() {
   const exportOptions = {
     ...newProductExportOptions,
     isNewProduct: !isAddColorMode,
+    ...(isAddColorMode ? { inventoryQuantity: "0" } : {}),
   };
   const detectedTextures = getDetectedTextures(activeMultiGroups, textures);
   const activeTextures = isMultiMode ? detectedTextures : selectedTextures;
@@ -409,13 +410,12 @@ function App() {
             <WeightInput weight={weight} setWeight={setWeight} />
           )}
 
-          {!isAddColorMode && (
-            <InventoryExportOptions
-              options={newProductExportOptions}
-              setOptions={setNewProductExportOptions}
-              isMultiMode={isMultiMode}
-            />
-          )}
+          <InventoryExportOptions
+            options={exportOptions}
+            setOptions={setNewProductExportOptions}
+            isMultiMode={isMultiMode}
+            variantOnly={isAddColorMode}
+          />
         </div>
 
         <div className="preview-panel">
