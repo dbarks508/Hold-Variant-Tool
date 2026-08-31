@@ -1,3 +1,5 @@
+import { isFullTextureOnlyManufacturer } from "../utils/manufacturerRules";
+
 function TextureSelector({
   textures,
   selectedTextures,
@@ -5,7 +7,10 @@ function TextureSelector({
   selectedMfgr,
 }) {
   function toggleTexture(texture) {
-    if (selectedMfgr?.code === "compx" && texture.code !== "FT") {
+    if (
+      isFullTextureOnlyManufacturer(selectedMfgr) &&
+      texture.code !== "FT"
+    ) {
       return;
     }
 
@@ -27,7 +32,8 @@ function TextureSelector({
       <div className="option-grid">
         {textures.map((texture) => {
           const isDisabled =
-            selectedMfgr?.code === "compx" && texture.code !== "FT";
+            isFullTextureOnlyManufacturer(selectedMfgr) &&
+            texture.code !== "FT";
 
           return (
             <label

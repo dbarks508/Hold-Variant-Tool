@@ -9,6 +9,7 @@ import {
   getDetectedTextures,
 } from "./utils/generateMultiVariants";
 import { parseHextomUpload } from "./utils/parseHextomUpload";
+import { isFullTextureOnlyManufacturer } from "./utils/manufacturerRules";
 import { manufacturers } from "./data/manufacturers";
 import "./App.css";
 
@@ -168,7 +169,7 @@ function App() {
   function updateSelectedMfgr(mfgr) {
     setSelectedMfgr(mfgr);
 
-    if (mfgr.code === "compx") {
+    if (isFullTextureOnlyManufacturer(mfgr)) {
       setSelectedTextures((currentTextures) =>
         currentTextures.filter((texture) => texture.code === "FT"),
       );

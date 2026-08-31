@@ -1,3 +1,5 @@
+import { isFullTextureOnlyManufacturer } from "./manufacturerRules.js";
+
 function getUniqueColors(colors = []) {
   const seenNames = new Set();
 
@@ -59,9 +61,10 @@ export function generateVariants({
       usesFullTextureSuffix && texture.code === "FT" ? `(${texture.code})` : "";
 
     variants.push({
-      title: omitTextureFromTitle
-        ? formatColorName(color)
-        : `${formatColorName(color)} - ${texture.code}`,
+      title:
+        omitTextureFromTitle || isFullTextureOnlyManufacturer(selectedMfgr)
+          ? formatColorName(color)
+          : `${formatColorName(color)} - ${texture.code}`,
       mfgr: selectedMfgr.code,
       texture: texture.code,
       color1: formatColorName(color),
@@ -111,7 +114,7 @@ export function generateVariants({
   }
 
   selectedTextures.forEach((texture) => {
-    if (selectedMfgr.code === "compx" && texture.code !== "FT") {
+    if (isFullTextureOnlyManufacturer(selectedMfgr) && texture.code !== "FT") {
       return;
     }
 
