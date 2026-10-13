@@ -15,4 +15,8 @@ export const manufacturers = [
     code: "aragon",
     label: "Aragon",
   },
+  {
+    code: "core",
+    label: "Core",
+  },
 ];

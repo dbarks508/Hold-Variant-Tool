@@ -4,6 +4,7 @@ export const colors = [
     codes: {
       compx: "CX311-12",
       absolute: "AB111-12",
+      core: "CO111-12",
       supr: "SP211-12",
       aragon: "AR011-12",
     },
@@ -13,6 +14,7 @@ export const colors = [
     codes: {
       compx: "CX014-01",
       absolute: "AB114-01",
+      core: "CO114-01",
       supr: "SP014-01",
       aragon: "AR014-01",
     },
@@ -22,6 +24,7 @@ export const colors = [
     codes: {
       compx: "CX015-12",
       absolute: "AB115-12",
+      core: "CO115-12",
       supr: "SP215-12",
       aragon: "AR015-12",
     },
@@ -31,6 +34,7 @@ export const colors = [
     codes: {
       compx: "CX016-16",
       absolute: "AB116-16",
+      core: "CO116-16",
       supr: "SP016-16",
       aragon: "AR016-16",
     },
@@ -40,6 +44,7 @@ export const colors = [
     codes: {
       compx: "CX213-01",
       absolute: "AB213-01",
+      core: "CO113-01",
       supr: "SP213-01",
       aragon: "AR013-01",
     },
@@ -57,6 +62,7 @@ export const colors = [
     codes: {
       compx: "CX211-26",
       absolute: "AB211-26",
+      core: "CO111-26",
       supr: "SP311-26",
       aragon: "AR011-26",
     },
@@ -66,6 +72,7 @@ export const colors = [
     codes: {
       compx: "CX018-01",
       absolute: "AB018-01",
+      core: "CO118-01",
       supr: "SP018-01",
       aragon: "AR018-01",
     },
@@ -75,6 +82,7 @@ export const colors = [
     codes: {
       compx: "CX012-01",
       absolute: "AB112-01",
+      core: "CO112-01",
       supr: "SP012-01",
       aragon: "AR012-01",
     },
@@ -179,6 +187,7 @@ export const colors = [
     codes: {
       compx: "CX016-27",
       absolute: "AB016-27",
+      core: "CO116-27",
       supr: "SP016-27",
       aragon: "AR016-27",
     },
