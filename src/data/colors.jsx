@@ -55,6 +55,7 @@ export const colors = [
       compx: "CX007-13",
       absolute: "AB207-13",
       aragon: "AR007-13",
+      core: "CO107-13",
     },
   },
   {
