@@ -129,6 +129,7 @@ export const colors = [
     name: "squash orange",
     codes: {
       aragon: "AR014-06",
+      absolute: "AB114-06",
     },
   },
   {
