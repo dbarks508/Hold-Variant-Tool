@@ -1,3 +1,5 @@
+import { requiresDtBaseColorSelection } from "../utils/manufacturerRules";
+
 function DtBaseColorSelector({
   selectedMfgr,
   selectedColors,
@@ -7,10 +9,9 @@ function DtBaseColorSelector({
   colorOptions = selectedColors,
   emptyMessage = "Select colors to choose DT bases.",
 }) {
-  const isAbsolute = selectedMfgr?.code === "absolute";
   const isDtSelected = selectedTextures.some((texture) => texture.code === "DT");
 
-  if (!isAbsolute || !isDtSelected) {
+  if (!requiresDtBaseColorSelection(selectedMfgr) || !isDtSelected) {
     return null;
   }
 
@@ -28,7 +29,7 @@ function DtBaseColorSelector({
 
   return (
     <section className="tool-section tool-section--accent">
-      <h2>Absolute DT Base Colors</h2>
+      <h2>{selectedMfgr.label} DT Base Colors</h2>
 
       {colorOptions.length === 0 ? (
         <p className="empty-state">{emptyMessage}</p>

@@ -1,4 +1,7 @@
-import { isFullTextureOnlyManufacturer } from "./manufacturerRules.js";
+import {
+  isFullTextureOnlyManufacturer,
+  requiresDtBaseColorSelection,
+} from "./manufacturerRules.js";
 
 function getUniqueColors(colors = []) {
   const seenNames = new Set();
@@ -148,8 +151,9 @@ export function generateVariants({
         return;
       }
 
-      const baseColors =
-        selectedMfgr.code === "absolute" ? selectedDtBaseColors : pairColors;
+      const baseColors = requiresDtBaseColorSelection(selectedMfgr)
+        ? selectedDtBaseColors
+        : pairColors;
       const insetColors = isAddColorMode ? newColors : selectedColors;
 
       baseColors.forEach((baseColor) => {
