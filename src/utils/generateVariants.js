@@ -57,7 +57,7 @@ export function generateVariants({
       return;
     }
 
-    const usesFullTextureSuffix = ["absolute", "supr"].includes(
+    const usesFullTextureSuffix = ["absolute", "supr", "walltopia"].includes(
       selectedMfgr.code,
     );
     const textureSuffix =
