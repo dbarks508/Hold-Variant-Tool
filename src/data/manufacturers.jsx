@@ -19,4 +19,8 @@ export const manufacturers = [
     code: "core",
     label: "Core",
   },
+  {
+    code: "walltopia",
+    label: "Walltopia",
+  },
 ];
