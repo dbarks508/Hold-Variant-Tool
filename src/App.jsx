@@ -9,7 +9,11 @@ import {
   getDetectedTextures,
 } from "./utils/generateMultiVariants";
 import { parseHextomUpload } from "./utils/parseHextomUpload";
-import { isFullTextureOnlyManufacturer } from "./utils/manufacturerRules";
+import {
+  isBarockaManufacturer,
+  isTextureSupported,
+  requiresDtBaseColorSelection,
+} from "./utils/manufacturerRules";
 import { manufacturers } from "./data/manufacturers";
 import "./App.css";
 
@@ -169,10 +173,11 @@ function App() {
   function updateSelectedMfgr(mfgr) {
     setSelectedMfgr(mfgr);
 
-    if (isFullTextureOnlyManufacturer(mfgr)) {
-      setSelectedTextures((currentTextures) =>
-        currentTextures.filter((texture) => texture.code === "FT"),
-      );
+    setSelectedTextures((currentTextures) =>
+      currentTextures.filter((texture) => isTextureSupported(mfgr, texture.code)),
+    );
+
+    if (!requiresDtBaseColorSelection(mfgr)) {
       setSelectedDtBaseColors([]);
     }
   }
@@ -214,6 +219,11 @@ function App() {
 
   const isMultiMode = mode === "multi";
   const isAddColorMode = generationMode === "add-color";
+  const isBarocka = isBarockaManufacturer(selectedMfgr);
+  const visibleTextures = textures.filter((texture) =>
+    isBarocka ? texture.code !== "DP" : texture.code !== "NT",
+  );
+  const textureCodes = visibleTextures.map((texture) => texture.code).join(", ");
   const hasIncompatibleNewProductUpload =
     isMultiMode &&
     !isAddColorMode &&
@@ -315,6 +325,7 @@ function App() {
                 summary={activeMultiSummary}
                 onFileChange={updateHextomUpload}
                 isNewProductMode={!isAddColorMode}
+                selectedMfgr={selectedMfgr}
               />
               <UploadWarnings warnings={uploadWarnings} />
             </>
@@ -330,18 +341,20 @@ function App() {
 
           {isAddColorMode ? (
             <>
-              <ColorSelector
-                title="Existing Companion Colors"
-                colors={manufacturerColors.filter(
-                  (color) =>
-                    !selectedNewColors.some(
-                      (newColor) => newColor.name === color.name,
-                    ),
-                )}
-                selectedColors={effectiveExistingColors}
-                setSelectedColors={setSelectedExistingColors}
-                emptyMessage="Select a manufacturer to choose companion colors."
-              />
+              {!isBarocka && (
+                <ColorSelector
+                  title="Existing Companion Colors"
+                  colors={manufacturerColors.filter(
+                    (color) =>
+                      !selectedNewColors.some(
+                        (newColor) => newColor.name === color.name,
+                      ),
+                  )}
+                  selectedColors={effectiveExistingColors}
+                  setSelectedColors={setSelectedExistingColors}
+                  emptyMessage="Select a manufacturer to choose companion colors."
+                />
+              )}
               <ColorSelector
                 title="New Colors"
                 colors={manufacturerColors}
@@ -364,8 +377,8 @@ function App() {
               {detectedTextures.length === 0 ? (
                 <p className="empty-state">
                   {isAddColorMode
-                    ? "Upload a Hextom export with Option value 1 containing DT, FT, or DP."
-                    : "Upload a New Product price sheet with FT price, DT price, and/or DP price columns."}
+                    ? `Upload a Hextom export with Option value 1 containing ${textureCodes}.`
+                    : `Upload a New Product price sheet with texture-price columns (${textureCodes}).`}
                 </p>
               ) : (
                 <div className="detected-textures">
@@ -377,7 +390,7 @@ function App() {
             </section>
           ) : (
             <TextureSelector
-              textures={textures}
+              textures={visibleTextures}
               selectedTextures={selectedTextures}
               setSelectedTextures={setSelectedTextures}
               selectedMfgr={selectedMfgr}

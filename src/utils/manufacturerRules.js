@@ -11,3 +11,19 @@ export function isFullTextureOnlyManufacturer(manufacturer) {
 export function requiresDtBaseColorSelection(manufacturer) {
   return DT_BASE_COLOR_SELECTION_MANUFACTURER_CODES.has(manufacturer?.code);
 }
+
+export function isBarockaManufacturer(manufacturer) {
+  return manufacturer?.code === "barocka";
+}
+
+export function isTextureSupported(manufacturer, textureCode) {
+  if (isBarockaManufacturer(manufacturer)) {
+    return ["FT", "DT", "NT"].includes(textureCode);
+  }
+
+  if (isFullTextureOnlyManufacturer(manufacturer)) {
+    return textureCode === "FT";
+  }
+
+  return ["FT", "DT", "DP"].includes(textureCode);
+}

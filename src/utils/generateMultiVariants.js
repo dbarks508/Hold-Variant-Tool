@@ -1,6 +1,5 @@
 import { generateVariants } from "./generateVariants.js";
-
-const TEXTURE_ORDER = ["FT", "DT", "DP"];
+import { textureOrder } from "../data/textures.jsx";
 
 function getTextureByCode(textures, code) {
   return textures.find((texture) => texture.code === code);
@@ -9,7 +8,7 @@ function getTextureByCode(textures, code) {
 export function getDetectedTextures(groups = [], textures = []) {
   const detectedCodes = [...new Set(groups.map((group) => group.texture))];
 
-  return TEXTURE_ORDER.filter((code) => detectedCodes.includes(code))
+  return textureOrder.filter((code) => detectedCodes.includes(code))
     .map((code) => getTextureByCode(textures, code))
     .filter(Boolean);
 }

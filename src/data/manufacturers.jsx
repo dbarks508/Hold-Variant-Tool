@@ -23,4 +23,8 @@ export const manufacturers = [
     code: "walltopia",
     label: "Walltopia",
   },
+  {
+    code: "barocka",
+    label: "Barocka",
+  },
 ];

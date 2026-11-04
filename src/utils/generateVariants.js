@@ -1,5 +1,7 @@
 import {
+  isBarockaManufacturer,
   isFullTextureOnlyManufacturer,
+  isTextureSupported,
   requiresDtBaseColorSelection,
 } from "./manufacturerRules.js";
 
@@ -38,6 +40,8 @@ export function generateVariants({
     return variants;
   }
 
+  const isBarocka = isBarockaManufacturer(selectedMfgr);
+
   function getColorCode(color) {
     return color.codes?.[selectedMfgr.code] || "";
   }
@@ -61,11 +65,14 @@ export function generateVariants({
       selectedMfgr.code,
     );
     const textureSuffix =
-      usesFullTextureSuffix && texture.code === "FT" ? `(${texture.code})` : "";
+      isBarocka || (usesFullTextureSuffix && texture.code === "FT")
+        ? `(${texture.code})`
+        : "";
 
     variants.push({
       title:
-        omitTextureFromTitle || isFullTextureOnlyManufacturer(selectedMfgr)
+        !isBarocka &&
+        (omitTextureFromTitle || isFullTextureOnlyManufacturer(selectedMfgr))
           ? formatColorName(color)
           : `${formatColorName(color)} - ${texture.code}`,
       mfgr: selectedMfgr.code,
@@ -86,9 +93,9 @@ export function generateVariants({
     }
 
     variants.push({
-      title: `${formatColorName(color1)}/${formatColorName(color2)} - ${
-        texture.code
-      }`,
+      title: isBarocka
+        ? `${formatColorName(color1)} - ${texture.code}`
+        : `${formatColorName(color1)}/${formatColorName(color2)} - ${texture.code}`,
       mfgr: selectedMfgr.code,
       texture: texture.code,
       color1: formatColorName(color1),
@@ -117,7 +124,7 @@ export function generateVariants({
   }
 
   selectedTextures.forEach((texture) => {
-    if (isFullTextureOnlyManufacturer(selectedMfgr) && texture.code !== "FT") {
+    if (!isTextureSupported(selectedMfgr, texture.code)) {
       return;
     }
 
@@ -128,6 +135,13 @@ export function generateVariants({
     const pairColors = isAddColorMode
       ? getUniqueColors([...existingColors, ...newColors])
       : selectedColors;
+
+    if (isBarocka && texture.code === "DT") {
+      getUniqueColors(newColors).forEach((color) =>
+        addPairVariant(color, color, texture, price),
+      );
+      return;
+    }
 
     if (texture.mode === "single") {
       newColors.forEach((color) => addSingleVariant(color, texture, price));

@@ -1,4 +1,4 @@
-import { isFullTextureOnlyManufacturer } from "../utils/manufacturerRules";
+import { isTextureSupported } from "../utils/manufacturerRules";
 
 function TextureSelector({
   textures,
@@ -7,10 +7,7 @@ function TextureSelector({
   selectedMfgr,
 }) {
   function toggleTexture(texture) {
-    if (
-      isFullTextureOnlyManufacturer(selectedMfgr) &&
-      texture.code !== "FT"
-    ) {
+    if (!isTextureSupported(selectedMfgr, texture.code)) {
       return;
     }
 
@@ -31,9 +28,7 @@ function TextureSelector({
 
       <div className="option-grid">
         {textures.map((texture) => {
-          const isDisabled =
-            isFullTextureOnlyManufacturer(selectedMfgr) &&
-            texture.code !== "FT";
+          const isDisabled = !isTextureSupported(selectedMfgr, texture.code);
 
           return (
             <label

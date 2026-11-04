@@ -14,4 +14,11 @@ export const textures = [
     label: "Dual-Tex Premium",
     mode: "pair",
   },
+  {
+    code: "NT",
+    label: "No Texture",
+    mode: "single",
+  },
 ];
+
+export const textureOrder = textures.map((texture) => texture.code);

@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { textureOrder } from "../data/textures.jsx";
 
 import {
   newProductRequiredPerProductFields,
@@ -25,7 +26,7 @@ const REQUIRED_HEADERS = [
   },
 ];
 
-const TEXTURE_ORDER = ["FT", "DT", "DP"];
+const TEXTURE_ORDER = textureOrder;
 
 const NEW_PRODUCT_PRICE_HEADERS = {
   handle: ["Handle", "Product handle"],
@@ -34,6 +35,7 @@ const NEW_PRODUCT_PRICE_HEADERS = {
   FT: ["FT price", "Price FT", "FT", "Full Texture price"],
   DT: ["DT price", "Price DT", "DT", "Dual Tex price"],
   DP: ["DP price", "Price DP", "DP", "Dual-Tex Premium price"],
+  NT: ["NT price", "Price NT", "NT", "No Texture price"],
 };
 
 function normalizeHeader(header) {
@@ -54,7 +56,7 @@ function detectTexture(optionValue) {
     };
   }
 
-  const match = normalizedOptionValue.match(/-\s*(DT|FT|DP)\b/i);
+  const match = normalizedOptionValue.match(/-\s*(DT|FT|DP|NT)\b/i);
   return {
     code: match ? match[1].toUpperCase() : "FT",
     isImplicit: !match,
@@ -560,7 +562,7 @@ function buildNewProductPriceUpload(rows) {
     }
 
     if (!hasTexturePrice) {
-      missingValues.push("price/FT/DT/DP price");
+      missingValues.push("price/FT/DT/DP/NT price");
     }
 
     if (!normalizeValue(row[weightHeader]) && !sharedWeight) {
@@ -681,7 +683,7 @@ function buildNewProductPriceUpload(rows) {
 
   if (normalizedRows.length === 0) {
     throw new Error(
-      "The New Product price sheet does not contain any price, FT, DT, or DP values.",
+      "The New Product price sheet does not contain any price, FT, DT, DP, or NT values.",
     );
   }
 

@@ -8,6 +8,7 @@ export const colors = [
       walltopia: "WT111-12",
       supr: "SP211-12",
       aragon: "AR011-12",
+      barocka: "BA111-12",
     },
   },
   {
@@ -19,6 +20,7 @@ export const colors = [
       walltopia: "WT114-11",
       supr: "SP014-01",
       aragon: "AR014-01",
+      barocka: "BA114-01",
     },
   },
   {
@@ -30,6 +32,7 @@ export const colors = [
       walltopia: "WT115-12",
       supr: "SP215-12",
       aragon: "AR015-12",
+      barocka: "BA115-12",
     },
   },
   {
@@ -41,6 +44,7 @@ export const colors = [
       walltopia: "WT116-16",
       supr: "SP016-16",
       aragon: "AR016-16",
+      barocka: "BA116-16",
     },
   },
   {
@@ -52,6 +56,7 @@ export const colors = [
       walltopia: "WT113-01",
       supr: "SP213-01",
       aragon: "AR013-01",
+      barocka: "BA113-01",
     },
   },
   {
@@ -73,6 +78,7 @@ export const colors = [
       walltopia: "WT111-25",
       supr: "SP311-26",
       aragon: "AR011-26",
+      barocka: "BA111-26",
     },
   },
   {
@@ -84,6 +90,7 @@ export const colors = [
       walltopia: "WT118-01",
       supr: "SP018-01",
       aragon: "AR018-01",
+      barocka: "BA118-01",
     },
   },
   {
@@ -95,18 +102,21 @@ export const colors = [
       walltopia: "WT112-01",
       supr: "SP012-01",
       aragon: "AR012-01",
+      barocka: "BA112-01",
     },
   },
   {
     name: "light gray",
     codes: {
       aragon: "AR018-12",
+      barocka: "BA218-12",
     },
   },
   {
     name: "dark granite",
     codes: {
       aragon: "AR018-09",
+      barocka: "BA218-09",
     },
   },
   {
@@ -168,6 +178,7 @@ export const colors = [
       absolute: "AB116-09",
       supr: "SP116-09",
       aragon: "AR016-09",
+      barocka: "BA216-09",
     },
   },
   {
@@ -202,6 +213,7 @@ export const colors = [
       core: "CO116-27",
       supr: "SP016-27",
       aragon: "AR016-27",
+      barocka: "BA116-27",
     },
   },
   {
@@ -232,6 +244,7 @@ export const colors = [
     name: "euro mint",
     codes: {
       aragon: "AR013-25",
+      barocka: "BA213-25",
     },
   },
   {
@@ -241,6 +254,7 @@ export const colors = [
       compx: "CX217-18",
       absolute: "AB317-18",
       aragon: "AR017-18",
+      barocka: "BA217-18",
     },
   },
   {
