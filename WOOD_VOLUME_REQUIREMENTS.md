@@ -13,6 +13,7 @@ Working requirements for adding wood volumes as a new product type in the Hold V
 7. **DT is the only texture whose SKU uses a slash-separated color pair.** Only matching color pairs that produce a solid color are allowed, such as **`black/black`**; mixed color pairs are excluded. **FT and NT SKUs each use a single color code, with no slash.**
 8. Selecting **Barocka** in the existing manufacturer selector automatically applies the wood-volume rules, just like other manufacturer-specific rules. No separate product-type selector is needed.
 9. **Do not prompt for DT base colors for Barocka**, as with Supr. Each selected color automatically pairs with itself for DT. The separate DT base-color selector remains specific to Absolute and Walltopia; Supr's mixed-color pairing behavior does not apply to Barocka.
+10. Barocka wood-volume variants need a **Manufacturer Color Code** value for the variant metafield **`mfgr.color_code`** (single-line text), so it can appear on pick lists. Hard-code the supplied mapping by Barocka color and repeat the value on every matching FT, DT, and NT variant in Single/Multi Mode and New Product/Add Color. Include it in CSV downloads, CSV preview, and Copy Table as an appended column so existing column positions remain unchanged. This requirement currently applies only to volumes.
 
 ## Supplied SKU Examples
 
@@ -27,6 +28,8 @@ Confirmed examples:
 ## Barocka Colors and Codes
 
 Use the **Complete** code as the Barocka color code in generated SKUs. The manufacturer prefix is **BA**.
+
+Use the **Barocka Code** RAL value, including the `RAL ` prefix, as the variant Manufacturer Color Code (`mfgr.color_code`). Each color uses the same RAL value for FT, DT, and NT; matching DT pairs export the value once.
 
 | WEB Color | MFGR | Variance | Barocka Code | Core | Complete |
 | --- | --- | --- | --- | --- | --- |
@@ -56,4 +59,5 @@ No outstanding clarification questions. Any additional behavior specific to wood
 - Barocka Add Color needs only the new colors; companion colors are not needed because DT pairs always match.
 - Hextom uploads recognize `- NT`. New Product price sheets accept `NT price`, `Price NT`, `NT`, or `No Texture price`; the Barocka texture-price header template includes `NT price` in place of `DP price`.
 - A generic price continues to mean FT. Barocka color option labels always include the texture suffix, including when the uploaded FT price or option label is implicit.
+- Barocka variants carry the hard-coded RAL value from the color data into CSV downloads, CSV preview, and Copy Table. The `mfgr.color_code` column is appended after `weight unit` only when Barocka variants are present; existing column positions are preserved. Other manufacturers do not receive this column.
 - Automated coverage is available through `npm test` for generation, imports, exports, and existing manufacturer conventions.

@@ -10,6 +10,7 @@ export const colors = [
       aragon: "AR011-12",
       barocka: "BA311-12",
     },
+    manufacturerColorCodes: { barocka: "RAL 3020" },
   },
   {
     name: "orange",
@@ -22,6 +23,7 @@ export const colors = [
       aragon: "AR014-01",
       barocka: "BA014-01",
     },
+    manufacturerColorCodes: { barocka: "RAL 2004" },
   },
   {
     name: "yellow",
@@ -34,6 +36,7 @@ export const colors = [
       aragon: "AR015-12",
       barocka: "BA015-12",
     },
+    manufacturerColorCodes: { barocka: "RAL 1023" },
   },
   {
     name: "green",
@@ -46,6 +49,7 @@ export const colors = [
       aragon: "AR016-16",
       barocka: "BA016-16",
     },
+    manufacturerColorCodes: { barocka: "RAL 6001" },
   },
   {
     name: "blue",
@@ -58,6 +62,7 @@ export const colors = [
       aragon: "AR013-01",
       barocka: "BA213-01",
     },
+    manufacturerColorCodes: { barocka: "RAL 5015" },
   },
   {
     name: "purple",
@@ -80,6 +85,7 @@ export const colors = [
       aragon: "AR011-26",
       barocka: "BA211-26",
     },
+    manufacturerColorCodes: { barocka: "RAL 4010" },
   },
   {
     name: "black",
@@ -92,6 +98,7 @@ export const colors = [
       aragon: "AR018-01",
       barocka: "BA018-01",
     },
+    manufacturerColorCodes: { barocka: "RAL 9005" },
   },
   {
     name: "white",
@@ -104,6 +111,7 @@ export const colors = [
       aragon: "AR012-01",
       barocka: "BA012-01",
     },
+    manufacturerColorCodes: { barocka: "RAL 9010" },
   },
   {
     name: "light gray",
@@ -111,6 +119,7 @@ export const colors = [
       aragon: "AR018-12",
       barocka: "BA118-12",
     },
+    manufacturerColorCodes: { barocka: "RAL 7040" },
   },
   {
     name: "dark granite",
@@ -118,6 +127,7 @@ export const colors = [
       aragon: "AR018-09",
       barocka: "BA118-09",
     },
+    manufacturerColorCodes: { barocka: "RAL 7021" },
   },
   {
     name: "charcoal",
@@ -180,6 +190,7 @@ export const colors = [
       aragon: "AR016-09",
       barocka: "BA216-09",
     },
+    manufacturerColorCodes: { barocka: "RAL 6039" },
   },
   {
     name: "flat neon green",
@@ -215,6 +226,7 @@ export const colors = [
       aragon: "AR016-27",
       barocka: "BA016-27",
     },
+    manufacturerColorCodes: { barocka: "RAL 6027" },
   },
   {
     name: "lightest blue",
@@ -246,6 +258,7 @@ export const colors = [
       aragon: "AR013-25",
       barocka: "BA113-25",
     },
+    manufacturerColorCodes: { barocka: "RAL 5018" },
   },
   {
     name: "light purple",
@@ -256,6 +269,7 @@ export const colors = [
       aragon: "AR017-18",
       barocka: "BA217-18",
     },
+    manufacturerColorCodes: { barocka: "RAL 4008" },
   },
   {
     name: "dark purple",

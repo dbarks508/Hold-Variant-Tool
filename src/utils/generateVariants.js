@@ -79,6 +79,9 @@ export function generateVariants({
       texture: texture.code,
       color1: formatColorName(color),
       color2: "",
+      manufacturerColorCode: isBarocka
+        ? color.manufacturerColorCodes?.barocka || ""
+        : "",
       sku: formatSku(`${parentSku}.${colorCode}${textureSuffix}`),
       price,
     });
@@ -100,6 +103,9 @@ export function generateVariants({
       texture: texture.code,
       color1: formatColorName(color1),
       color2: formatColorName(color2),
+      manufacturerColorCode: isBarocka
+        ? color1.manufacturerColorCodes?.barocka || ""
+        : "",
       sku: formatSku(
         `${parentSku}.${colorCode1}/${colorCode2}(${texture.code})`,
       ),

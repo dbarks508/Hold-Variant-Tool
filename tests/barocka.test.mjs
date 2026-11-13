@@ -49,6 +49,23 @@ const color = (name) => colors.find((item) => item.name === name);
 const barockaColors = () => colors.filter((item) => item.codes.barocka);
 const barockaTextures = () => textures.filter((item) => item.code !== "DP");
 const prices = { FT: "100.00", DT: "110.00", NT: "90.00" };
+const ralCodes = {
+  white: "RAL 9010", yellow: "RAL 1023", "lime green": "RAL 6039",
+  green: "RAL 6001", red: "RAL 3020", pink: "RAL 4010",
+  orange: "RAL 2004", blue: "RAL 5015", "euro mint": "RAL 5018",
+  mint: "RAL 6027", "light gray": "RAL 7040", "dark granite": "RAL 7021",
+  black: "RAL 9005", "light purple": "RAL 4008",
+};
+function assertRalRows(rows) {
+  assert.ok(rows.length > 0);
+  for (const row of rows) {
+    assert.deepEqual(Object.keys(row).slice(-2), ["weight unit", "mfgr.color_code"]);
+    const colorName = row["option value 1"].split(" - ")[0].toLowerCase();
+    assert.ok(ralCodes[colorName]);
+    assert.equal(row["mfgr.color_code"], ralCodes[colorName]);
+    assert.equal(row["weight unit"], "POUNDS");
+  }
+}
 const generate = (overrides = {}) => generateVariants({
   selectedMfgr: manufacturer("barocka"),
   parentSku: "KWB001",
@@ -115,6 +132,7 @@ test("Single Add Color generates only new colors without requiring companions", 
     selectedExistingColors: [color("red"), color("white")],
   });
   assert.equal(variants.length, 6);
+  assertRalRows(Papa.parse(buildVariantsCsv(variants), { header: true }).data);
   assert.deepEqual([...new Set(variants.map((item) => item.color1))], ["Black", "Mint"]);
   assert.ok(variants.filter((item) => item.texture === "DT").every((item) => item.color1 === item.color2));
   assert.equal(generate({ generationMode: "add-color", selectedNewColors: [color("black")] }).length, 3);
@@ -140,6 +158,7 @@ test("One Single Mode product exports all 42 variants with correct prices, weigh
   const csv = buildVariantsCsv(variants, "KWB001", "2.5", options);
   const { data: rows, errors } = Papa.parse(csv, { header: true });
   assert.deepEqual(errors, []);
+  assertRalRows(rows);
   assert.equal(rows.length, 42);
   assert.deepEqual([...new Set(rows.map((row) => row.handle))], ["KWB001"]);
   for (const texture of ["FT", "DT", "NT"]) {
@@ -194,6 +213,7 @@ test("Multi New Product imports FT/DT/NT pricing and exports product metadata an
   const rows = getVariantCsvRows(variants, "", "", {
     isNewProduct: true, optionName1: "Color", requiresShipping: true, trackQuantity: true,
   });
+  assertRalRows(rows);
   for (const handle of ["KWB001", "KWB002"]) {
     const productRows = rows.filter((row) => row.handle === handle);
     assert.equal(productRows.length, 42);
@@ -207,6 +227,7 @@ test("Multi New Product imports FT/DT/NT pricing and exports product metadata an
   assert.equal(rows.find((row) => row.handle === "KWB002" && row["option value 1"] === "Black - NT")["variant price"], "95.00");
   const csv = buildVariantsCsv(variants, "", "", { isNewProduct: true });
   assert.equal(Papa.parse(csv, { header: true }).data.length, 84);
+  assertRalRows(Papa.parse(csv, { header: true }).data);
 });
 
 for (const header of ["NT price", "Price NT", "NT", "No Texture price"]) {
@@ -244,6 +265,8 @@ test("Multi Add Color classifies NT separately and exports only new solid colors
   });
   assert.deepEqual(variants.map((item) => item.title), ["Mint - FT", "Mint - DT", "Mint - NT"]);
   const rows = getVariantCsvRows(variants, "", "", { requiresShipping: true, trackQuantity: true, inventoryQuantity: "0" });
+  assertRalRows(rows);
+  assertRalRows(Papa.parse(buildVariantsCsv(variants), { header: true }).data);
   assert.equal(rows.length, 3);
   assert.equal(rows[1]["variant sku"], "KWB001.BA016-27/BA016-27(DT)");
   assert.equal(rows[2]["variant sku"], "KWB001.BA016-27(NT)");
@@ -283,6 +306,11 @@ test("Existing manufacturer SKU and pairing conventions are preserved, and NT is
     const variants = generate({ selectedMfgr: manufacturer(code), selectedColors: [color("black"), color("white")], selectedDtBaseColors: [color("black")] });
     assert.deepEqual([variants[0].sku, variants[0].title], [sku, title]);
     assert.ok(variants.every((item) => item.texture !== "NT"));
+    for (const isNewProduct of [false, true]) {
+      const rows = Papa.parse(buildVariantsCsv(variants, "KWB001", "1", { isNewProduct }), { header: true }).data;
+      assert.ok(rows.every((row) => !("mfgr.color_code" in row)));
+      assert.equal(Object.keys(rows[0]).at(-1), "weight unit");
+    }
     const paired = variants.filter((item) => item.texture === "DT");
     if (["compx", "aragon"].includes(code)) assert.equal(variants.length, 2);
     else {

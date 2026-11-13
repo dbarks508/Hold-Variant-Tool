@@ -37,6 +37,12 @@ function hasUploadedValue(variants, key) {
 }
 
 export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
+  const manufacturerColorHeaders = variants.some(
+    (variant) => variant.mfgr === "barocka",
+  )
+    ? ["mfgr.color_code"]
+    : [];
+
   if (!exportOptions.isNewProduct) {
     return [
       "handle",
@@ -46,6 +52,7 @@ export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
       "track quantity",
       ...newProductVariantTextFields.map((field) => field.header),
       "weight unit",
+      ...manufacturerColorHeaders,
     ];
   }
 
@@ -67,6 +74,7 @@ export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
       .map((field) => field.header),
     ...newProductVariantTextFields.map((field) => field.header),
     "weight unit",
+    ...manufacturerColorHeaders,
   ];
 }
 
@@ -89,6 +97,8 @@ export function getVariantCsvRows(
       "variant price": variant.price || "",
       weight: variant.weight ?? weight,
       "weight unit": "POUNDS",
+      "mfgr.color_code":
+        variant.mfgr === "barocka" ? variant.manufacturerColorCode || "" : "",
       "requires shipping": formatBoolean(exportOptions.requiresShipping),
       "track quantity": formatBoolean(exportOptions.trackQuantity),
     };
