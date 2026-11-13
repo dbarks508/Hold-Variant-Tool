@@ -45,6 +45,7 @@ export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
       ...(exportOptions.inventoryPolicyEnabled ? ["inventory policy"] : []),
       "track quantity",
       ...newProductVariantTextFields.map((field) => field.header),
+      "weight unit",
     ];
   }
 
@@ -65,6 +66,7 @@ export function getVariantCsvHeaders(exportOptions = {}, variants = []) {
       .filter((field) => field.key !== "optionName1")
       .map((field) => field.header),
     ...newProductVariantTextFields.map((field) => field.header),
+    "weight unit",
   ];
 }
 
@@ -86,6 +88,7 @@ export function getVariantCsvRows(
       "variant sku": variant.sku,
       "variant price": variant.price || "",
       weight: variant.weight ?? weight,
+      "weight unit": "POUNDS",
       "requires shipping": formatBoolean(exportOptions.requiresShipping),
       "track quantity": formatBoolean(exportOptions.trackQuantity),
     };
