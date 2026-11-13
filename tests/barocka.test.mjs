@@ -79,11 +79,11 @@ const productRow = (overrides = {}) => ({
 test("Barocka offers exactly the documented 14 color codes and three textures", () => {
   assert.equal(manufacturer("barocka").label, "Barocka");
   assert.deepEqual(Object.fromEntries(barockaColors().map((item) => [item.name, item.codes.barocka])), {
-    white: "BA112-01", yellow: "BA115-12", "lime green": "BA216-09",
-    green: "BA116-16", red: "BA111-12", pink: "BA111-26",
-    orange: "BA114-01", blue: "BA113-01", "euro mint": "BA213-25",
-    mint: "BA116-27", "light gray": "BA218-12", "dark granite": "BA218-09",
-    black: "BA118-01", "light purple": "BA217-18",
+    white: "BA012-01", yellow: "BA015-12", "lime green": "BA216-09",
+    green: "BA016-16", red: "BA311-12", pink: "BA211-26",
+    orange: "BA014-01", blue: "BA213-01", "euro mint": "BA113-25",
+    mint: "BA016-27", "light gray": "BA118-12", "dark granite": "BA118-09",
+    black: "BA018-01", "light purple": "BA217-18",
   });
   assert.deepEqual(textures.filter((item) => isTextureSupported(manufacturer("barocka"), item.code))
     .map((item) => item.code), ["FT", "DT", "NT"]);
@@ -102,9 +102,9 @@ test("Single New Product generates 42 unique variants with matching DT pairs onl
     if (variant.texture === "DT") assert.equal(variant.color1, variant.color2);
   }
   assert.deepEqual(variants.filter((item) => item.color1 === "Black").map((item) => item.sku), [
-    "KWB001.BA118-01(FT)",
-    "KWB001.BA118-01/BA118-01(DT)",
-    "KWB001.BA118-01(NT)",
+    "KWB001.BA018-01(FT)",
+    "KWB001.BA018-01/BA018-01(DT)",
+    "KWB001.BA018-01(NT)",
   ]);
 });
 
@@ -245,8 +245,8 @@ test("Multi Add Color classifies NT separately and exports only new solid colors
   assert.deepEqual(variants.map((item) => item.title), ["Mint - FT", "Mint - DT", "Mint - NT"]);
   const rows = getVariantCsvRows(variants, "", "", { requiresShipping: true, trackQuantity: true, inventoryQuantity: "0" });
   assert.equal(rows.length, 3);
-  assert.equal(rows[1]["variant sku"], "KWB001.BA116-27/BA116-27(DT)");
-  assert.equal(rows[2]["variant sku"], "KWB001.BA116-27(NT)");
+  assert.equal(rows[1]["variant sku"], "KWB001.BA016-27/BA016-27(DT)");
+  assert.equal(rows[2]["variant sku"], "KWB001.BA016-27(NT)");
   assert.ok(rows.every((row) => row.weight === "2.5" && row["inventory quantity"] === "0"));
   assert.equal("product title" in rows[0], false);
 });

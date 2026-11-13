@@ -30,19 +30,19 @@ Use the **Complete** code as the Barocka color code in generated SKUs. The manuf
 
 | WEB Color | MFGR | Variance | Barocka Code | Core | Complete |
 | --- | --- | --- | --- | --- | --- |
-| White | BA | 1 | RAL 9010 | 12-01 | BA112-01 |
-| Yellow | BA | 1 | RAL 1023 | 15-12 | BA115-12 |
+| White | BA | 0 | RAL 9010 | 12-01 | BA012-01 |
+| Yellow | BA | 0 | RAL 1023 | 15-12 | BA015-12 |
 | Lime Green | BA | 2 | RAL 6039 | 16-09 | BA216-09 |
-| Green | BA | 1 | RAL 6001 | 16-16 | BA116-16 |
-| Red | BA | 1 | RAL 3020 | 11-12 | BA111-12 |
-| Pink | BA | 1 | RAL 4010 | 11-26 | BA111-26 |
-| Orange | BA | 1 | RAL 2004 | 14-01 | BA114-01 |
-| Blue | BA | 1 | RAL 5015 | 13-01 | BA113-01 |
-| Euro Mint | BA | 2 | RAL 5018 | 13-25 | BA213-25 |
-| Mint | BA | 1 | RAL 6027 | 16-27 | BA116-27 |
-| Light Gray | BA | 2 | RAL 7040 | 18-12 | BA218-12 |
-| Dark Granite | BA | 2 | RAL 7021 | 18-09 | BA218-09 |
-| Black | BA | 1 | RAL 9005 | 18-01 | BA118-01 |
+| Green | BA | 0 | RAL 6001 | 16-16 | BA016-16 |
+| Red | BA | 3 | RAL 3020 | 11-12 | BA311-12 |
+| Pink | BA | 2 | RAL 4010 | 11-26 | BA211-26 |
+| Orange | BA | 0 | RAL 2004 | 14-01 | BA014-01 |
+| Blue | BA | 2 | RAL 5015 | 13-01 | BA213-01 |
+| Euro Mint | BA | 1 | RAL 5018 | 13-25 | BA113-25 |
+| Mint | BA | 0 | RAL 6027 | 16-27 | BA016-27 |
+| Light Gray | BA | 1 | RAL 7040 | 18-12 | BA118-12 |
+| Dark Granite | BA | 1 | RAL 7021 | 18-09 | BA118-09 |
+| Black | BA | 0 | RAL 9005 | 18-01 | BA018-01 |
 | Light Purple | BA | 2 | RAL 4008 | 17-18 | BA217-18 |
 
 ## Details to Define
