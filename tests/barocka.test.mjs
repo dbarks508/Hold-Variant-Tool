@@ -300,7 +300,7 @@ test("Existing manufacturer SKU and pairing conventions are preserved, and NT is
   const expectedFt = {
     compx: ["KWB001.CX018-01", "Black"], aragon: ["KWB001.AR018-01", "Black"],
     absolute: ["KWB001.AB018-01(FT)", "Black - FT"], supr: ["KWB001.SP018-01(FT)", "Black - FT"],
-    walltopia: ["KWB001.WT118-01(FT)", "Black - FT"], core: ["KWB001.CO118-01", "Black - FT"],
+    walltopia: ["KWB001.WT018-01(FT)", "Black - FT"], core: ["KWB001.CO118-01", "Black - FT"],
   };
   for (const [code, [sku, title]] of Object.entries(expectedFt)) {
     const variants = generate({ selectedMfgr: manufacturer(code), selectedColors: [color("black"), color("white")], selectedDtBaseColors: [color("black")] });
